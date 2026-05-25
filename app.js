@@ -560,6 +560,7 @@ const backToTopButton = document.querySelector("#back-to-top");
 
 let activeSectionId = "";
 let highlightedGlossaryId = "";
+let highlightedModuleId = "";
 
 function usesPageScroll() {
   return window.matchMedia("(max-width: 1080px)").matches;
@@ -576,6 +577,21 @@ function scrollToTop() {
   }
 
   contentPanel.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function scrollToElement(target) {
+  if (!target) return;
+
+  if (usesPageScroll()) {
+    const top = window.scrollY + target.getBoundingClientRect().top - 16;
+    window.scrollTo({ top, behavior: "smooth" });
+    return;
+  }
+
+  const panelRect = contentPanel.getBoundingClientRect();
+  const targetRect = target.getBoundingClientRect();
+  const top = contentPanel.scrollTop + (targetRect.top - panelRect.top) - 16;
+  contentPanel.scrollTo({ top, behavior: "smooth" });
 }
 
 function normalize(value) {
@@ -693,6 +709,7 @@ function renderModules(items) {
 
     const card = moduleTemplate.content.firstElementChild.cloneNode(true);
     card.id = `module-${blueprint.slug}`;
+    card.classList.toggle("is-target", card.id === highlightedModuleId);
     card.querySelector(".section-tag").textContent = `${tag} module`;
     card.querySelector(".module-count").textContent = `${groupedSections.length} matching topics`;
     card.querySelector(".module-title").textContent = tag;
@@ -823,7 +840,7 @@ topicList.addEventListener("click", (event) => {
 
   activeSectionId = link.dataset.sectionId;
   updateActiveNav();
-  target.scrollIntoView({ behavior: "smooth", block: "start" });
+  scrollToElement(target);
 });
 
 contentPanel.addEventListener("click", (event) => {
@@ -835,7 +852,7 @@ contentPanel.addEventListener("click", (event) => {
 
     const target = document.getElementById(`glossary-${highlightedGlossaryId}`);
     if (target) {
-      target.scrollIntoView({ behavior: "smooth", block: "start" });
+      scrollToElement(target);
     }
 
     return;
@@ -845,9 +862,11 @@ contentPanel.addEventListener("click", (event) => {
   if (!internalLink) return;
 
   event.preventDefault();
-  const target = document.querySelector(internalLink.getAttribute("href"));
+  highlightedModuleId = internalLink.getAttribute("href").slice(1);
+  renderModules(sections.filter((section) => matchesSection(section, normalize(searchInput.value.trim()))));
+  const target = document.getElementById(highlightedModuleId);
   if (target) {
-    target.scrollIntoView({ behavior: "smooth", block: "start" });
+    scrollToElement(target);
   }
 });
 

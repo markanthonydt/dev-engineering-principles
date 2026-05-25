@@ -376,6 +376,13 @@ body {
   background: rgba(255, 249, 238, 0.88);
   box-shadow: var(--shadow);
   scroll-margin-top: 20px;
+  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.module-card.is-target {
+  border-color: rgba(191, 90, 42, 0.42);
+  box-shadow: 0 0 0 4px rgba(191, 90, 42, 0.1), var(--shadow);
+  transform: translateY(-2px);
 }
 
 .section-topline {
