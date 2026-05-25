@@ -546,6 +546,23 @@ const backToTopButton = document.querySelector("#back-to-top");
 let activeSectionId = "";
 let highlightedGlossaryId = "";
 
+function usesPageScroll() {
+  return window.matchMedia("(max-width: 1080px)").matches;
+}
+
+function currentScrollTop() {
+  return usesPageScroll() ? window.scrollY : contentPanel.scrollTop;
+}
+
+function scrollToTop() {
+  if (usesPageScroll()) {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    return;
+  }
+
+  contentPanel.scrollTo({ top: 0, behavior: "smooth" });
+}
+
 function normalize(value) {
   return value.toLowerCase();
 }
@@ -735,7 +752,7 @@ function syncActiveSection() {
 }
 
 function syncBackToTopVisibility() {
-  backToTopButton.classList.toggle("is-visible", contentPanel.scrollTop > 520);
+  backToTopButton.classList.toggle("is-visible", currentScrollTop() > 520);
 }
 
 function render(queryText = "") {
@@ -749,7 +766,11 @@ function render(queryText = "") {
   renderSections(filtered, queryText.trim());
   renderGlossary(filteredGlossary, queryText.trim());
   updateActiveNav();
-  contentPanel.scrollTo({ top: 0, behavior: "auto" });
+  if (usesPageScroll()) {
+    window.scrollTo({ top: 0, behavior: "auto" });
+  } else {
+    contentPanel.scrollTo({ top: 0, behavior: "auto" });
+  }
   syncBackToTopVisibility();
 }
 
@@ -785,12 +806,22 @@ contentPanel.addEventListener("click", (event) => {
 });
 
 contentPanel.addEventListener("scroll", () => {
+  if (usesPageScroll()) return;
   syncActiveSection();
   syncBackToTopVisibility();
 });
 
 backToTopButton.addEventListener("click", () => {
-  contentPanel.scrollTo({ top: 0, behavior: "smooth" });
+  scrollToTop();
+});
+
+window.addEventListener("scroll", () => {
+  if (!usesPageScroll()) return;
+  syncBackToTopVisibility();
+});
+
+window.addEventListener("resize", () => {
+  syncBackToTopVisibility();
 });
 
 render();
