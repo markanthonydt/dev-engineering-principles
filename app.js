@@ -541,6 +541,7 @@ const resultsSummary = document.querySelector("#results-summary");
 const template = document.querySelector("#section-template");
 const glossaryTemplate = document.querySelector("#glossary-template");
 const contentPanel = document.querySelector(".content");
+const backToTopButton = document.querySelector("#back-to-top");
 
 let activeSectionId = "";
 let highlightedGlossaryId = "";
@@ -733,6 +734,10 @@ function syncActiveSection() {
   updateActiveNav();
 }
 
+function syncBackToTopVisibility() {
+  backToTopButton.classList.toggle("is-visible", contentPanel.scrollTop > 520);
+}
+
 function render(queryText = "") {
   const query = normalize(queryText.trim());
   const filtered = sections.filter((section) => matchesSection(section, query));
@@ -745,6 +750,7 @@ function render(queryText = "") {
   renderGlossary(filteredGlossary, queryText.trim());
   updateActiveNav();
   contentPanel.scrollTo({ top: 0, behavior: "auto" });
+  syncBackToTopVisibility();
 }
 
 searchInput.addEventListener("input", (event) => {
@@ -780,6 +786,11 @@ contentPanel.addEventListener("click", (event) => {
 
 contentPanel.addEventListener("scroll", () => {
   syncActiveSection();
+  syncBackToTopVisibility();
+});
+
+backToTopButton.addEventListener("click", () => {
+  contentPanel.scrollTo({ top: 0, behavior: "smooth" });
 });
 
 render();
