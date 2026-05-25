@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Codex Engineering Principles</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="background-grid" aria-hidden="true"></div>
+  <div class="page-shell">
+    <aside class="sidebar">
+      <div class="brand-block">
+        <p class="eyebrow">Reference Guide</p>
+        <h1>Codex Engineering Principles</h1>
+        <p class="lede">A structured guide to software engineering judgment, coding principles, and productive Codex-assisted development.</p>
+      </div>
+
+      <label class="search-panel" for="search-input">
+        <span>Search the guide</span>
+        <input id="search-input" type="search" placeholder="principles, testing, prompts, review...">
+      </label>
+
+      <nav class="topic-nav" aria-label="Guide sections">
+        <div class="nav-header">
+          <span>Sections</span>
+          <span id="match-count">0 matches</span>
+        </div>
+        <ul id="topic-list"></ul>
+      </nav>
+    </aside>
+
+    <main class="content">
+      <section class="hero-card">
+        <div>
+          <p class="eyebrow">Build Better Software</p>
+          <h2>Use principles as defaults. Use Codex as leverage, not judgment.</h2>
+        </div>
+        <div class="hero-metrics" aria-label="Guide highlights">
+          <article>
+            <strong>10</strong>
+            <span>core domains</span>
+          </article>
+          <article>
+            <strong>100</strong>
+            <span>reference sections</span>
+          </article>
+          <article>
+            <strong>1</strong>
+            <span>fast local app</span>
+          </article>
+        </div>
+      </section>
+
+      <section class="principles-strip" aria-label="Guiding beliefs">
+        <article>
+          <h3>Outcome over output</h3>
+          <p>Shipped code matters only if it improves the system without hidden damage.</p>
+        </article>
+        <article>
+          <h3>Clarity over cleverness</h3>
+          <p>Readable systems survive handoffs, incidents, and scale better than smart tricks.</p>
+        </article>
+        <article>
+          <h3>Verification over confidence</h3>
+          <p>Tests, traces, and local checks are worth more than intuition.</p>
+        </article>
+      </section>
+
+      <section class="content-header">
+        <div>
+          <p class="eyebrow">Guide Content</p>
+          <h2 id="results-title">All sections</h2>
+        </div>
+        <p id="results-summary">Browse 100 sections on principles, engineering practices, and Codex workflows.</p>
+      </section>
+
+      <section id="content-grid" class="content-grid" aria-live="polite"></section>
+    </main>
+  </div>
+
+  <template id="section-template">
+    <article class="section-card">
+      <div class="section-topline">
+        <span class="section-tag"></span>
+        <span class="section-anchor"></span>
+      </div>
+      <h3 class="section-title"></h3>
+      <p class="section-summary"></p>
+      <div class="subsection-group">
+        <h4>Principles</h4>
+        <ul class="principles-list"></ul>
+      </div>
+      <div class="subsection-group">
+        <h4>With Codex</h4>
+        <ul class="codex-list"></ul>
+      </div>
+      <div class="subsection-group">
+        <h4>Failure Modes</h4>
+        <ul class="risk-list"></ul>
+      </div>
+    </article>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>
