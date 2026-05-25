@@ -15,9 +15,11 @@ const sectionBlueprints = [
       ["Working Agreements", "Shared defaults on quality, review, and delivery reduce friction across the team."]
     ],
     principles: [
-      "Map the real system boundary before changing implementation details.",
-      "Name the main constraint so design tradeoffs stay explicit.",
-      "Prefer decisions that remain legible to future maintainers."
+      "Map the real system boundary before changing implementation details, including users, dependencies, operations, and failure handling.",
+      "Name the main constraint so design tradeoffs stay explicit instead of being rediscovered halfway through implementation.",
+      "Prefer decisions that remain legible to future maintainers, especially when the current team context is no longer available.",
+      "Evaluate local fixes against end-to-end behavior so you do not optimize one subsystem while harming the wider system.",
+      "Make the reason behind important decisions visible in code, tests, or docs rather than leaving it as tribal knowledge."
     ],
     codex: [
       "Ask Codex to summarize architecture, dependencies, and likely blast radius before proposing changes.",
@@ -46,9 +48,11 @@ const sectionBlueprints = [
       ["Estimation Discipline", "Estimate uncertainty honestly instead of compressing it into false precision."]
     ],
     principles: [
-      "Separate user outcomes from implementation ideas.",
-      "Define what success and failure look like before writing code.",
-      "Use smaller slices when uncertainty is high."
+      "Separate user outcomes from implementation ideas so the team can change approach without reopening the whole problem statement.",
+      "Define what success and failure look like before writing code, including edge conditions and non-goals.",
+      "Use smaller slices when uncertainty is high so feedback arrives before architecture hardens around wrong assumptions.",
+      "Treat scope as a risk-control tool; when a change grows, re-cut the work instead of normalizing drift.",
+      "Resolve ambiguous requirements into observable acceptance criteria that reviewers and testers can verify consistently."
     ],
     codex: [
       "Use Codex to turn rough goals into testable acceptance criteria.",
@@ -77,9 +81,11 @@ const sectionBlueprints = [
       ["Deletion as Improvement", "Removing unnecessary code is often higher leverage than rewriting it."]
     ],
     principles: [
-      "Prefer straightforward control flow and obvious ownership.",
-      "Keep abstractions proportional to the problem.",
-      "Reduce hidden state and implicit behavior."
+      "Prefer straightforward control flow and obvious ownership so a reader can understand behavior without mentally simulating too much context.",
+      "Keep abstractions proportional to the problem; introduce layers only when they remove repeated complexity or isolate volatility.",
+      "Reduce hidden state and implicit behavior because surprise is one of the main drivers of maintenance cost.",
+      "Use names, module boundaries, and comments to clarify intent where the code alone would force unnecessary reverse engineering.",
+      "Bias toward deleting or simplifying code before inventing new structure to manage existing complexity."
     ],
     codex: [
       "Ask Codex to explain a module in plain language before changing it.",
@@ -108,9 +114,11 @@ const sectionBlueprints = [
       ["Test Maintenance", "A test suite is production infrastructure and needs active pruning and care."]
     ],
     principles: [
-      "Test behavior that matters to users and system safety.",
-      "Add coverage where change risk or failure cost is highest.",
-      "Keep failures easy to diagnose."
+      "Test behavior that matters to users and system safety rather than only exercising internal code paths.",
+      "Add coverage where change risk or failure cost is highest, especially boundaries, migrations, and shared contracts.",
+      "Keep failures easy to diagnose by making assertions specific and test setup readable.",
+      "Use regression tests to preserve lessons learned from real bugs instead of trusting memory alone.",
+      "Prefer deterministic tests that fail for one clear reason over broad tests that are hard to interpret."
     ],
     codex: [
       "Ask Codex to derive tests from acceptance criteria and bug reports.",
@@ -139,9 +147,11 @@ const sectionBlueprints = [
       ["Postmortem Quality", "A useful postmortem improves the system and the team’s future decisions."]
     ],
     principles: [
-      "Reproduce first, instrument second, patch last.",
-      "Make every debugging step shrink the search space.",
-      "Prefer reversible actions during uncertainty."
+      "Reproduce first, instrument second, patch last so the team learns from evidence rather than from accidental correlation.",
+      "Make every debugging step shrink the search space instead of scattering changes across multiple hypotheses at once.",
+      "Prefer reversible actions during uncertainty, especially in production or shared environments.",
+      "Write down the leading hypotheses and what evidence would disprove each one to keep debugging disciplined.",
+      "Distinguish root cause from visible symptom so the final fix removes recurrence rather than cosmetically masking the failure."
     ],
     codex: [
       "Use Codex to propose hypotheses ranked by likelihood and impact.",
@@ -170,9 +180,11 @@ const sectionBlueprints = [
       ["Technical Debt Management", "Debt is manageable only when it is visible, bounded, and intentionally repaid."]
     ],
     principles: [
-      "Measure before optimizing and verify after.",
-      "Keep readability unless the performance gain is meaningful.",
-      "Treat concurrency as a correctness problem first."
+      "Measure before optimizing and verify after so performance work is tied to actual bottlenecks rather than folklore.",
+      "Keep readability unless the performance gain is meaningful enough to justify the added complexity permanently.",
+      "Treat concurrency as a correctness problem first and a throughput optimization second.",
+      "Model the operational cost of retries, caches, queues, and background work instead of assuming they are free abstractions.",
+      "Use latency, throughput, and resource budgets to decide which optimization work is materially worth doing."
     ],
     codex: [
       "Ask Codex for a benchmark plan before changing implementation.",
@@ -232,9 +244,11 @@ const sectionBlueprints = [
       ["Compliance and Auditability", "Systems in regulated contexts need change and access decisions to remain explainable."]
     ],
     principles: [
-      "Design observability for diagnosis, not just collection.",
-      "Plan rollback and recovery before shipping risky changes.",
-      "Make operational ownership explicit."
+      "Design observability for diagnosis, not just collection, so emitted signals answer real questions during incidents.",
+      "Plan rollback and recovery before shipping risky changes rather than treating reversibility as emergency work.",
+      "Make operational ownership explicit so alerts, dashboards, and runbooks have clear maintainers.",
+      "Emit errors, metrics, and traces that preserve context across service boundaries instead of forcing manual reconstruction.",
+      "Treat production safety as part of feature completeness, not a separate concern that can wait until later."
     ],
     codex: [
       "Ask Codex which signals are missing for a feature or incident class.",
@@ -263,9 +277,11 @@ const sectionBlueprints = [
       ["Sustainable Pace", "Systems and teams degrade when speed is extracted without recovery and discipline."]
     ],
     principles: [
-      "Keep changes focused so intent stays obvious.",
-      "Review for risk and behavior before style.",
-      "Write context for future readers, not only current collaborators."
+      "Keep changes focused so intent stays obvious and reviewers can evaluate correctness without reconstructing multiple concerns at once.",
+      "Review for risk and behavior before style because regressions and blind spots are more expensive than formatting disagreements.",
+      "Write context for future readers, not only current collaborators, in commits, pull requests, and decision notes.",
+      "Use handoffs and documentation to preserve momentum when ownership changes or work pauses.",
+      "Treat code review as a quality and learning mechanism rather than just a merge gate."
     ],
     codex: [
       "Use Codex to pre-review diffs for bugs, regressions, and missing tests.",
@@ -294,9 +310,11 @@ const sectionBlueprints = [
       ["Human Judgment Remains Primary", "Architecture, risk tolerance, and final acceptance still belong to the engineer."]
     ],
     principles: [
-      "Give Codex concrete scope, local context, and verification expectations.",
-      "Use iterative loops instead of one giant generation request.",
-      "Treat fluent output as a draft until checked."
+      "Give Codex concrete scope, local context, and verification expectations so the assistant solves the actual problem instead of a generic one.",
+      "Use iterative loops instead of one giant generation request because smaller checkpoints are easier to validate and redirect.",
+      "Treat fluent output as a draft until checked against code, tests, docs, or execution.",
+      "Ask for assumptions, alternatives, and likely failure modes whenever the change touches architecture or production behavior.",
+      "Keep generated diffs reviewable enough that a human can still exercise final engineering judgment."
     ],
     codex: [
       "Start with inspection, then ask for options, then implementation, then verification.",
@@ -346,6 +364,13 @@ const glossaryEntries = [
     detail: "A good API is predictable, constrained, and documented with behavior rather than implementation detail. It should make the safe path obvious and misuse difficult."
   },
   {
+    id: "backlog-motion",
+    term: "Backlog Motion",
+    aliases: ["ticket churn", "task movement"],
+    summary: "Work appearing active because tickets are being updated or moved, even though meaningful progress is limited.",
+    detail: "Backlog motion is a planning smell. It often means tasks are vague, blocked, or being re-described instead of being reduced to validated engineering outcomes."
+  },
+  {
     id: "blast-radius",
     term: "Blast Radius",
     aliases: ["impact radius", "change impact"],
@@ -372,6 +397,13 @@ const glossaryEntries = [
     aliases: ["service contract", "behavioral agreement"],
     summary: "The promises a module or service makes about inputs, outputs, and behavior.",
     detail: "Contracts are stronger when they stay stable, document failure behavior, and can be verified directly through tests or examples."
+  },
+  {
+    id: "dependency-mapping",
+    term: "Dependency Mapping",
+    aliases: ["dependency graph", "upstream dependencies", "downstream dependencies"],
+    summary: "Identifying what a system relies on and what relies on it before making a change.",
+    detail: "Dependency mapping reduces surprises. It helps engineers understand blast radius, rollout sequencing, ownership boundaries, and likely integration risks before implementation starts."
   },
   {
     id: "coupling",
@@ -430,6 +462,13 @@ const glossaryEntries = [
     detail: "Regression prevention is one of the highest-value uses of tests. Each real production bug should pressure the suite toward better coverage."
   },
   {
+    id: "rollout",
+    term: "Rollout",
+    aliases: ["deployment rollout", "phased release"],
+    summary: "The controlled process of exposing a change to real environments or users.",
+    detail: "A good rollout is staged, observable, and reversible. It is where feature flags, canaries, migration sequencing, and rollback planning meet operational risk management."
+  },
+  {
     id: "rollback",
     term: "Rollback",
     aliases: ["revert deployment", "backout"],
@@ -449,6 +488,13 @@ const glossaryEntries = [
     aliases: ["work boundary", "change surface"],
     summary: "The explicit limits of what a task or change includes and excludes.",
     detail: "Clear scope controls delivery risk. It prevents a useful change from ballooning into a multi-problem rewrite."
+  },
+  {
+    id: "state-transition",
+    term: "State Transition",
+    aliases: ["state transitions", "workflow transition", "state change"],
+    summary: "A change from one defined condition or workflow state to another.",
+    detail: "State transitions matter because bugs often appear between stable states rather than inside them. Explicit transitions make workflows easier to validate, migrate, and reason about."
   },
   {
     id: "technical-debt",
