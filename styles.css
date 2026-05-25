@@ -238,6 +238,24 @@ body {
   border-color: rgba(191, 90, 42, 0.24);
 }
 
+.term-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.28rem;
+  border-radius: 0.45rem;
+  color: var(--accent-deep);
+  background: rgba(191, 90, 42, 0.12);
+  text-decoration: none;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.term-link:hover,
+.term-link:focus-visible {
+  outline: none;
+  background: rgba(191, 90, 42, 0.2);
+}
+
 .content {
   display: grid;
   gap: 22px;
@@ -317,6 +335,18 @@ body {
   gap: 20px;
 }
 
+.glossary-shell {
+  display: grid;
+  gap: 18px;
+  padding-bottom: 10px;
+}
+
+.glossary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
 .section-card {
   display: grid;
   gap: 18px;
@@ -369,6 +399,50 @@ body {
   background: var(--accent);
 }
 
+.glossary-card {
+  display: grid;
+  gap: 14px;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 251, 243, 0.82);
+  box-shadow: var(--shadow);
+  scroll-margin-top: 20px;
+}
+
+.glossary-card.is-target {
+  border-color: rgba(191, 90, 42, 0.42);
+  box-shadow: 0 0 0 4px rgba(191, 90, 42, 0.1), var(--shadow);
+}
+
+.glossary-card h3 {
+  margin: 0;
+  font-size: 1.45rem;
+}
+
+.glossary-aliases {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.alias-chip {
+  display: inline-flex;
+  padding: 6px 10px;
+  border: 1px solid rgba(191, 90, 42, 0.18);
+  border-radius: 999px;
+  color: var(--accent-deep);
+  background: rgba(191, 90, 42, 0.08);
+  font-size: 0.85rem;
+}
+
+.glossary-summary-text,
+.glossary-detail {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
 .empty-state {
   grid-column: 1 / -1;
   padding: 28px;
@@ -386,7 +460,8 @@ body {
   .page-shell,
   .hero-card,
   .principles-strip,
-  .content-grid {
+  .content-grid,
+  .glossary-grid {
     grid-template-columns: 1fr;
   }
 
@@ -410,13 +485,15 @@ body {
   .sidebar,
   .hero-card,
   .section-card,
-  .principles-strip article {
+  .principles-strip article,
+  .glossary-card {
     border-radius: 22px;
   }
 
   .sidebar,
   .hero-card,
-  .section-card {
+  .section-card,
+  .glossary-card {
     padding: 20px;
   }
 

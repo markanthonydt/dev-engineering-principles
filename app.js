@@ -323,16 +323,181 @@ const sections = sectionBlueprints.flatMap((blueprint) =>
   }))
 );
 
+const glossaryEntries = [
+  {
+    id: "acceptance-criteria",
+    term: "Acceptance Criteria",
+    aliases: ["definition of done", "success conditions"],
+    summary: "Explicit statements that define the observable behavior needed for a change to count as complete.",
+    detail: "Good acceptance criteria remove ambiguity between product intent, engineering interpretation, and test coverage. They are concrete enough to verify and narrow enough to avoid accidental scope growth."
+  },
+  {
+    id: "abstraction",
+    term: "Abstraction",
+    aliases: ["wrapper", "interface layer"],
+    summary: "A simplified boundary that hides lower-level detail so callers can work at a clearer level.",
+    detail: "Abstractions help when they remove repeated complexity or isolate volatility. They hurt when they obscure important behavior, ownership, or performance costs."
+  },
+  {
+    id: "api",
+    term: "API",
+    aliases: ["APIs", "interface", "contract surface"],
+    summary: "A defined way for one piece of software to interact with another through functions, endpoints, commands, or schemas.",
+    detail: "A good API is predictable, constrained, and documented with behavior rather than implementation detail. It should make the safe path obvious and misuse difficult."
+  },
+  {
+    id: "blast-radius",
+    term: "Blast Radius",
+    aliases: ["impact radius", "change impact"],
+    summary: "The scope of systems, users, or workflows that could be affected when a change fails.",
+    detail: "Blast radius is how engineers reason about risk. Smaller rollout steps, feature flags, and modular changes all help contain it."
+  },
+  {
+    id: "caching",
+    term: "Caching",
+    aliases: ["cache", "memoized storage"],
+    summary: "Storing previously computed or fetched data so future access is faster.",
+    detail: "Caching trades correctness complexity for speed. The hard part is invalidation, freshness guarantees, and what happens when cached data disagrees with source truth."
+  },
+  {
+    id: "concurrency",
+    term: "Concurrency",
+    aliases: ["parallel work", "parallelism"],
+    summary: "Multiple operations making progress during overlapping periods of time.",
+    detail: "Concurrency can improve throughput and responsiveness, but it also introduces coordination, ordering, and shared-state hazards that are easy to underestimate."
+  },
+  {
+    id: "contract",
+    term: "Contract",
+    aliases: ["service contract", "behavioral agreement"],
+    summary: "The promises a module or service makes about inputs, outputs, and behavior.",
+    detail: "Contracts are stronger when they stay stable, document failure behavior, and can be verified directly through tests or examples."
+  },
+  {
+    id: "coupling",
+    term: "Coupling",
+    aliases: ["dependency linkage", "tight coupling"],
+    summary: "The degree to which one part of a system depends on the details of another.",
+    detail: "High coupling makes change harder because local edits require wider coordination. Reducing hidden coupling usually improves maintainability and testability."
+  },
+  {
+    id: "debugging",
+    term: "Debugging",
+    aliases: ["fault isolation", "bug investigation"],
+    summary: "The process of finding the actual cause of incorrect behavior.",
+    detail: "Effective debugging is about shrinking uncertainty. Reproduction, instrumentation, and hypothesis ranking usually matter more than fast guessing."
+  },
+  {
+    id: "edge-case",
+    term: "Edge Case",
+    aliases: ["boundary case", "corner case"],
+    summary: "An uncommon but valid condition where behavior often differs from the normal path.",
+    detail: "Edge cases reveal assumptions. Empty input, retries, malformed data, concurrency races, and limits are common places where hidden bugs appear."
+  },
+  {
+    id: "idempotency",
+    term: "Idempotency",
+    aliases: ["repeat-safe operation", "replay safe"],
+    summary: "A property where repeating the same operation produces the same effect as doing it once.",
+    detail: "Idempotency matters in distributed systems, retries, and user-submitted actions. It reduces the damage from duplicate delivery or accidental re-execution."
+  },
+  {
+    id: "latency",
+    term: "Latency",
+    aliases: ["response time", "delay"],
+    summary: "The time it takes for a request or operation to complete.",
+    detail: "Latency is what users feel directly. Breaking down latency budgets across components helps teams find where performance work will matter."
+  },
+  {
+    id: "observability",
+    term: "Observability",
+    aliases: ["telemetry visibility", "runtime visibility"],
+    summary: "The ability to understand system behavior from outputs like logs, metrics, and traces.",
+    detail: "Observability is stronger than raw monitoring because it supports explanation, not just detection. The goal is to answer unknown questions during incidents."
+  },
+  {
+    id: "refactoring",
+    term: "Refactoring",
+    aliases: ["structural cleanup", "code reshaping"],
+    summary: "Improving internal code structure while preserving external behavior.",
+    detail: "Safe refactoring depends on stable behavior boundaries and verification. The best refactors reduce complexity one dimension at a time."
+  },
+  {
+    id: "regression",
+    term: "Regression",
+    aliases: ["behavioral breakage", "reintroduced bug"],
+    summary: "A previously correct behavior becoming broken after a change.",
+    detail: "Regression prevention is one of the highest-value uses of tests. Each real production bug should pressure the suite toward better coverage."
+  },
+  {
+    id: "rollback",
+    term: "Rollback",
+    aliases: ["revert deployment", "backout"],
+    summary: "Returning a system to an earlier known-good state after a risky change causes problems.",
+    detail: "Rollback is a reliability tool, not a failure of discipline. The easier it is to reverse a change safely, the more aggressively you can reduce production risk."
+  },
+  {
+    id: "runbook",
+    term: "Runbook",
+    aliases: ["operational playbook", "response guide"],
+    summary: "A practical document that explains how to diagnose, mitigate, or operate a known workflow or incident.",
+    detail: "Runbooks are most useful when they are specific, tested against real incidents, and written for the person under time pressure rather than the original author."
+  },
+  {
+    id: "scope",
+    term: "Scope",
+    aliases: ["work boundary", "change surface"],
+    summary: "The explicit limits of what a task or change includes and excludes.",
+    detail: "Clear scope controls delivery risk. It prevents a useful change from ballooning into a multi-problem rewrite."
+  },
+  {
+    id: "technical-debt",
+    term: "Technical Debt",
+    aliases: ["debt", "maintenance drag"],
+    summary: "The future cost created by a shortcut, workaround, or deferred structural improvement.",
+    detail: "Not all debt is bad. The key question is whether it was taken intentionally, is visible, and has a realistic repayment strategy."
+  },
+  {
+    id: "telemetry",
+    term: "Telemetry",
+    aliases: ["logs", "metrics", "traces"],
+    summary: "Runtime signals emitted by a system so humans and tools can inspect its behavior.",
+    detail: "Telemetry becomes useful when it maps to decisions. Collecting more data is not the same as collecting the right evidence."
+  },
+  {
+    id: "throughput",
+    term: "Throughput",
+    aliases: ["work rate", "capacity"],
+    summary: "How much work a system can complete in a period of time.",
+    detail: "Throughput matters for batch systems, queues, and heavily used APIs. A system can have high throughput and still have poor latency, so both need separate attention."
+  }
+];
+
+const glossaryLookup = new Map();
+const glossaryPatterns = [];
+
+glossaryEntries.forEach((entry) => {
+  [entry.term, ...entry.aliases].forEach((phrase) => {
+    glossaryLookup.set(phrase.toLowerCase(), entry);
+    glossaryPatterns.push(phrase);
+  });
+});
+
+const glossaryRegex = new RegExp(`\\b(${glossaryPatterns.sort((a, b) => b.length - a.length).map((phrase) => phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})\\b`, "gi");
+
 const searchInput = document.querySelector("#search-input");
 const topicList = document.querySelector("#topic-list");
 const contentGrid = document.querySelector("#content-grid");
+const glossaryGrid = document.querySelector("#glossary-grid");
 const matchCount = document.querySelector("#match-count");
 const resultsTitle = document.querySelector("#results-title");
 const resultsSummary = document.querySelector("#results-summary");
 const template = document.querySelector("#section-template");
+const glossaryTemplate = document.querySelector("#glossary-template");
 const contentPanel = document.querySelector(".content");
 
 let activeSectionId = "";
+let highlightedGlossaryId = "";
 
 function normalize(value) {
   return value.toLowerCase();
@@ -351,6 +516,21 @@ function matchesSection(section, query) {
   ].join(" ");
 
   return normalize(haystack).includes(query);
+}
+
+function matchesGlossary(entry, query) {
+  if (!query) return true;
+
+  return normalize([entry.term, ...entry.aliases, entry.summary, entry.detail].join(" ")).includes(query);
+}
+
+function linkifyText(text) {
+  return text.replace(glossaryRegex, (match) => {
+    const entry = glossaryLookup.get(match.toLowerCase());
+    if (!entry) return match;
+
+    return `<a class="term-link" href="#glossary-${entry.id}" data-glossary-id="${entry.id}">${match}</a>`;
+  });
 }
 
 function updateActiveNav() {
@@ -420,8 +600,43 @@ function renderNav(items) {
 function fillList(listElement, items) {
   items.forEach((item) => {
     const li = document.createElement("li");
-    li.textContent = item;
+    li.innerHTML = linkifyText(item);
     listElement.append(li);
+  });
+}
+
+function renderGlossary(items, query) {
+  glossaryGrid.innerHTML = "";
+
+  if (!items.length) {
+    const empty = document.createElement("article");
+    empty.className = "empty-state";
+    empty.innerHTML = `
+      <h3>No glossary terms match.</h3>
+      <p>Try searching for terms like <code>observability</code>, <code>scope</code>, or <code>rollback</code>.</p>
+    `;
+    glossaryGrid.append(empty);
+    return;
+  }
+
+  items.forEach((entry, index) => {
+    const card = glossaryTemplate.content.firstElementChild.cloneNode(true);
+    card.id = `glossary-${entry.id}`;
+    card.classList.toggle("is-target", entry.id === highlightedGlossaryId);
+    card.querySelector(".glossary-anchor").textContent = `Term ${String(index + 1).padStart(2, "0")}`;
+    card.querySelector(".glossary-title").textContent = entry.term;
+    card.querySelector(".glossary-summary-text").textContent = entry.summary;
+    card.querySelector(".glossary-detail").textContent = entry.detail;
+
+    const aliases = card.querySelector(".glossary-aliases");
+    entry.aliases.forEach((alias) => {
+      const chip = document.createElement("span");
+      chip.className = "alias-chip";
+      chip.textContent = alias;
+      aliases.append(chip);
+    });
+
+    glossaryGrid.append(card);
   });
 }
 
@@ -446,8 +661,8 @@ function renderSections(items, query) {
     card.id = section.id;
     card.querySelector(".section-tag").textContent = section.tag;
     card.querySelector(".section-anchor").textContent = `Section ${String(index + 1).padStart(3, "0")}`;
-    card.querySelector(".section-title").textContent = section.title;
-    card.querySelector(".section-summary").textContent = section.summary;
+    card.querySelector(".section-title").innerHTML = linkifyText(section.title);
+    card.querySelector(".section-summary").innerHTML = linkifyText(section.summary);
     fillList(card.querySelector(".principles-list"), section.principles);
     fillList(card.querySelector(".codex-list"), section.codex);
     fillList(card.querySelector(".risk-list"), section.risks);
@@ -475,11 +690,13 @@ function syncActiveSection() {
 function render(queryText = "") {
   const query = normalize(queryText.trim());
   const filtered = sections.filter((section) => matchesSection(section, query));
+  const filteredGlossary = glossaryEntries.filter((entry) => matchesGlossary(entry, query));
 
   matchCount.textContent = `${filtered.length} match${filtered.length === 1 ? "" : "es"}`;
   activeSectionId = filtered[0]?.id ?? "";
   renderNav(filtered);
   renderSections(filtered, queryText.trim());
+  renderGlossary(filteredGlossary, queryText.trim());
   updateActiveNav();
   contentPanel.scrollTo({ top: 0, behavior: "auto" });
 }
@@ -499,6 +716,20 @@ topicList.addEventListener("click", (event) => {
   activeSectionId = link.dataset.sectionId;
   updateActiveNav();
   target.scrollIntoView({ behavior: "smooth", block: "start" });
+});
+
+contentPanel.addEventListener("click", (event) => {
+  const glossaryLink = event.target.closest("a[data-glossary-id]");
+  if (!glossaryLink) return;
+
+  event.preventDefault();
+  highlightedGlossaryId = glossaryLink.dataset.glossaryId;
+  renderGlossary(glossaryEntries.filter((entry) => matchesGlossary(entry, normalize(searchInput.value.trim()))), searchInput.value.trim());
+
+  const target = document.getElementById(`glossary-${highlightedGlossaryId}`);
+  if (target) {
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 });
 
 contentPanel.addEventListener("scroll", () => {

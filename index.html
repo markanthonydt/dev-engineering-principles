@@ -76,6 +76,17 @@
       </section>
 
       <section id="content-grid" class="content-grid" aria-live="polite"></section>
+
+      <section class="glossary-shell" aria-labelledby="glossary-title">
+        <div class="content-header glossary-header">
+          <div>
+            <p class="eyebrow">Technical Thesaurus</p>
+            <h2 id="glossary-title">Glossary of key engineering terms</h2>
+          </div>
+          <p id="glossary-summary">Tap highlighted terms anywhere in the guide to jump here.</p>
+        </div>
+        <section id="glossary-grid" class="glossary-grid" aria-live="polite"></section>
+      </section>
     </main>
   </div>
 
@@ -99,6 +110,19 @@
         <h4>Failure Modes</h4>
         <ul class="risk-list"></ul>
       </div>
+    </article>
+  </template>
+
+  <template id="glossary-template">
+    <article class="glossary-card">
+      <div class="section-topline">
+        <span class="section-tag">Glossary</span>
+        <span class="section-anchor glossary-anchor"></span>
+      </div>
+      <h3 class="glossary-title"></h3>
+      <div class="glossary-aliases"></div>
+      <p class="glossary-summary-text"></p>
+      <p class="glossary-detail"></p>
     </article>
   </template>
 
