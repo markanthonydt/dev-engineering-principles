@@ -135,7 +135,8 @@ body {
 }
 
 .topic-nav ul,
-.section-card ul {
+.section-card ul,
+.module-card ul {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -374,6 +375,7 @@ body {
   border-radius: var(--radius);
   background: rgba(255, 249, 238, 0.88);
   box-shadow: var(--shadow);
+  scroll-margin-top: 20px;
 }
 
 .section-topline {
@@ -414,14 +416,16 @@ body {
   color: var(--accent-deep);
 }
 
-.section-card li {
+.section-card li,
+.module-card li {
   position: relative;
   padding-left: 18px;
   color: var(--muted);
   line-height: 1.5;
 }
 
-.section-card li::before {
+.section-card li::before,
+.module-card li::before {
   content: "";
   position: absolute;
   top: 0.64em;
