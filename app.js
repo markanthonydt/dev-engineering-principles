@@ -356,20 +356,61 @@ function matchesSection(section, query) {
 function updateActiveNav() {
   const links = topicList.querySelectorAll("a");
   links.forEach((link) => {
-    link.classList.toggle("active", link.dataset.sectionId === activeSectionId);
+    const isActive = link.dataset.sectionId === activeSectionId;
+    link.classList.toggle("active", isActive);
+
+    if (isActive) {
+      const details = link.closest("details");
+      if (details) {
+        details.open = true;
+      }
+    }
   });
+}
+
+function groupSectionsByTag(items) {
+  const groups = new Map();
+
+  items.forEach((section) => {
+    if (!groups.has(section.tag)) {
+      groups.set(section.tag, []);
+    }
+
+    groups.get(section.tag).push(section);
+  });
+
+  return [...groups.entries()];
 }
 
 function renderNav(items) {
   topicList.innerHTML = "";
 
-  items.forEach((section) => {
+  groupSectionsByTag(items).forEach(([tag, groupedSections], groupIndex) => {
     const li = document.createElement("li");
-    const link = document.createElement("a");
-    link.href = `#${section.id}`;
-    link.dataset.sectionId = section.id;
-    link.textContent = section.title;
-    li.append(link);
+    li.className = "module-group";
+
+    const details = document.createElement("details");
+    details.open = window.innerWidth > 720 || groupIndex === 0;
+
+    const summary = document.createElement("summary");
+    summary.className = "module-summary";
+    summary.innerHTML = `<span>${tag}</span><span class="module-meta">${groupedSections.length} sections</span>`;
+
+    const subList = document.createElement("ul");
+    subList.className = "module-links";
+
+    groupedSections.forEach((section) => {
+      const subItem = document.createElement("li");
+      const link = document.createElement("a");
+      link.href = `#${section.id}`;
+      link.dataset.sectionId = section.id;
+      link.textContent = section.title;
+      subItem.append(link);
+      subList.append(subItem);
+    });
+
+    details.append(summary, subList);
+    li.append(details);
     topicList.append(li);
   });
 
