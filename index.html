@@ -69,12 +69,13 @@
 
       <section class="content-header">
         <div>
-          <p class="eyebrow">Guide Content</p>
-          <h2 id="results-title">All sections</h2>
+          <p class="eyebrow">Module Guide</p>
+          <h2 id="results-title">All topics</h2>
         </div>
-        <p id="results-summary">Browse 100 sections on principles, engineering practices, and Codex workflows.</p>
+        <p id="results-summary">Browse 10 modules and 100 topics on principles, engineering practices, and Codex workflows.</p>
       </section>
 
+      <section id="module-grid" class="module-grid" aria-live="polite"></section>
       <section id="content-grid" class="content-grid" aria-live="polite"></section>
 
       <section class="glossary-shell" aria-labelledby="glossary-title">
@@ -102,6 +103,21 @@
       </div>
       <h3 class="section-title"></h3>
       <p class="section-summary"></p>
+      <div class="subsection-group topic-links-group">
+        <h4>Related module</h4>
+        <p class="topic-module-note"></p>
+      </div>
+    </article>
+  </template>
+
+  <template id="module-template">
+    <article class="module-card">
+      <div class="section-topline">
+        <span class="section-tag"></span>
+        <span class="section-anchor module-count"></span>
+      </div>
+      <h3 class="module-title"></h3>
+      <p class="module-summary"></p>
       <div class="subsection-group">
         <h4>Principles</h4>
         <ul class="principles-list"></ul>

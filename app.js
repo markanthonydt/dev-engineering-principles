@@ -121,9 +121,9 @@ const sectionBlueprints = [
       "Prefer deterministic tests that fail for one clear reason over broad tests that are hard to interpret."
     ],
     codex: [
-      "Ask Codex to derive tests from acceptance criteria and bug reports.",
-      "Use it to enumerate missing edge cases before implementation.",
-      "Have it critique whether assertions check behavior or just mirror the code."
+      "Ask Codex to derive tests from acceptance criteria and bug reports before implementation starts.",
+      "Use it to enumerate missing edge cases, adversarial inputs, and migration risks before code is merged.",
+      "Have it critique whether assertions check behavior or just mirror the implementation, and keep tests in the same change when practical."
     ],
     risks: [
       "Happy-path coverage creating false confidence.",
@@ -251,9 +251,9 @@ const sectionBlueprints = [
       "Treat production safety as part of feature completeness, not a separate concern that can wait until later."
     ],
     codex: [
-      "Ask Codex which signals are missing for a feature or incident class.",
-      "Use it to draft rollout checklists and runbooks.",
-      "Have it identify silent failures and weak alert conditions."
+      "Ask Codex which signals are missing for a feature or incident class, and separate user-visible symptoms from underlying causes.",
+      "Use it to draft rollout checklists, runbooks, and black-box versus white-box monitoring plans.",
+      "Have it identify silent failures, weak alert conditions, and missing trace, metric, or log context."
     ],
     risks: [
       "Verbose telemetry with no operational value.",
@@ -284,9 +284,9 @@ const sectionBlueprints = [
       "Treat code review as a quality and learning mechanism rather than just a merge gate."
     ],
     codex: [
-      "Use Codex to pre-review diffs for bugs, regressions, and missing tests.",
-      "Ask it to summarize likely reviewer questions.",
-      "Generate clearer handoff notes, commit messages, and documentation drafts."
+      "Use Codex to pre-review diffs for bugs, regressions, missing tests, and accidental complexity.",
+      "Ask it to summarize likely reviewer questions and whether the change should be split into smaller reviewable units.",
+      "Generate clearer handoff notes, commit messages, CL descriptions, and documentation drafts."
     ],
     risks: [
       "Large generated diffs that nobody can inspect properly.",
@@ -312,14 +312,14 @@ const sectionBlueprints = [
     principles: [
       "Give Codex concrete scope, local context, and verification expectations so the assistant solves the actual problem instead of a generic one.",
       "Use iterative loops instead of one giant generation request because smaller checkpoints are easier to validate and redirect.",
-      "Treat fluent output as a draft until checked against code, tests, docs, or execution.",
-      "Ask for assumptions, alternatives, and likely failure modes whenever the change touches architecture or production behavior.",
-      "Keep generated diffs reviewable enough that a human can still exercise final engineering judgment."
+      "Keep prompts simple and direct for reasoning models; do not rely on chain-of-thought prompting when clear task framing is enough.",
+      "Treat fluent output as a draft until checked against code, tests, docs, or execution, and pin model snapshots when consistency matters.",
+      "Back important prompt or model changes with evals that include normal cases, edge cases, and adversarial cases."
     ],
     codex: [
       "Start with inspection, then ask for options, then implementation, then verification.",
       "Request findings-first reviews and explicit uncertainty when confidence is low.",
-      "Have the assistant explain why a change is safe, not just what it changed."
+      "Have the assistant explain why a change is safe, not just what it changed, and rerun evals when prompts or models change."
     ],
     risks: [
       "Letting the assistant set architecture without constraints.",
@@ -340,6 +340,19 @@ const sections = sectionBlueprints.flatMap((blueprint) =>
     risks: blueprint.risks
   }))
 );
+
+const moduleOverviews = {
+  Foundation: "How to frame engineering work as a system problem instead of a local code problem.",
+  Planning: "How to turn intent into scoped, testable, low-surprise implementation work.",
+  "Code Quality": "How to keep code readable, bounded, and sustainable under change.",
+  Verification: "How to create confidence through tests, checks, and explicit evidence.",
+  Execution: "How to debug, investigate, and respond without widening uncertainty.",
+  Engineering: "How to reason about performance, scale, resilience, and long-term code health.",
+  Design: "How to shape interfaces, APIs, workflows, and contracts so they are hard to misuse.",
+  Reliability: "How to observe, deploy, recover, and operate systems safely in production.",
+  Teamwork: "How to review, document, and coordinate changes so quality compounds across people.",
+  "AI Workflow": "How to use Codex and reasoning models as leverage without giving up engineering judgment."
+};
 
 const glossaryEntries = [
   {
@@ -533,12 +546,14 @@ const glossaryRegex = new RegExp(`\\b(${glossaryPatterns.sort((a, b) => b.length
 
 const searchInput = document.querySelector("#search-input");
 const topicList = document.querySelector("#topic-list");
+const moduleGrid = document.querySelector("#module-grid");
 const contentGrid = document.querySelector("#content-grid");
 const glossaryGrid = document.querySelector("#glossary-grid");
 const matchCount = document.querySelector("#match-count");
 const resultsTitle = document.querySelector("#results-title");
 const resultsSummary = document.querySelector("#results-summary");
 const template = document.querySelector("#section-template");
+const moduleTemplate = document.querySelector("#module-template");
 const glossaryTemplate = document.querySelector("#glossary-template");
 const contentPanel = document.querySelector(".content");
 const backToTopButton = document.querySelector("#back-to-top");
@@ -669,6 +684,26 @@ function fillList(listElement, items) {
   });
 }
 
+function renderModules(items) {
+  moduleGrid.innerHTML = "";
+
+  groupSectionsByTag(items).forEach(([tag, groupedSections], index) => {
+    const blueprint = sectionBlueprints.find((entry) => entry.tag === tag);
+    if (!blueprint) return;
+
+    const card = moduleTemplate.content.firstElementChild.cloneNode(true);
+    card.id = `module-${blueprint.slug}`;
+    card.querySelector(".section-tag").textContent = `${tag} module`;
+    card.querySelector(".module-count").textContent = `${groupedSections.length} matching topics`;
+    card.querySelector(".module-title").textContent = tag;
+    card.querySelector(".module-summary").textContent = moduleOverviews[tag] ?? `Shared guidance for the ${tag} topics.`;
+    fillList(card.querySelector(".principles-list"), blueprint.principles);
+    fillList(card.querySelector(".codex-list"), blueprint.codex);
+    fillList(card.querySelector(".risk-list"), blueprint.risks);
+    moduleGrid.append(card);
+  });
+}
+
 function renderGlossary(items, query) {
   glossaryGrid.innerHTML = "";
 
@@ -708,12 +743,13 @@ function renderSections(items, query) {
   contentGrid.innerHTML = "";
 
   if (!items.length) {
-    resultsTitle.textContent = "No matching sections";
-    resultsSummary.textContent = `No sections matched "${query}".`;
+    moduleGrid.innerHTML = "";
+    resultsTitle.textContent = "No matching topics";
+    resultsSummary.textContent = `No topics matched "${query}".`;
     const empty = document.createElement("article");
     empty.className = "empty-state";
     empty.innerHTML = `
-      <h3>No sections match.</h3>
+      <h3>No topics match.</h3>
       <p>Try broader terms like <code>testing</code>, <code>review</code>, <code>debugging</code>, or <code>Codex</code>.</p>
     `;
     contentGrid.append(empty);
@@ -724,19 +760,17 @@ function renderSections(items, query) {
     const card = template.content.firstElementChild.cloneNode(true);
     card.id = section.id;
     card.querySelector(".section-tag").textContent = section.tag;
-    card.querySelector(".section-anchor").textContent = `Section ${String(index + 1).padStart(3, "0")}`;
+    card.querySelector(".section-anchor").textContent = `Topic ${String(index + 1).padStart(3, "0")}`;
     card.querySelector(".section-title").innerHTML = linkifyText(section.title);
     card.querySelector(".section-summary").innerHTML = linkifyText(section.summary);
-    fillList(card.querySelector(".principles-list"), section.principles);
-    fillList(card.querySelector(".codex-list"), section.codex);
-    fillList(card.querySelector(".risk-list"), section.risks);
+    card.querySelector(".topic-module-note").innerHTML = `Shared guidance for this topic lives in the <a class="term-link" href="#module-${section.id.replace(/-\d+$/, "")}">${section.tag}</a> module card above.`;
     contentGrid.append(card);
   });
 
-  resultsTitle.textContent = query ? "Filtered sections" : "All sections";
+  resultsTitle.textContent = query ? "Filtered topics" : "All topics";
   resultsSummary.textContent = query
-    ? `Showing ${items.length} section${items.length === 1 ? "" : "s"} matching "${query}".`
-    : "Browse 100 sections on principles, engineering practices, and Codex workflows.";
+    ? `Showing ${items.length} topic${items.length === 1 ? "" : "s"} matching "${query}".`
+    : "Browse 10 modules and 100 topics on principles, engineering practices, and Codex workflows.";
 }
 
 function syncActiveSection() {
@@ -763,6 +797,7 @@ function render(queryText = "") {
   matchCount.textContent = `${filtered.length} match${filtered.length === 1 ? "" : "es"}`;
   activeSectionId = filtered[0]?.id ?? "";
   renderNav(filtered);
+  renderModules(filtered);
   renderSections(filtered, queryText.trim());
   renderGlossary(filteredGlossary, queryText.trim());
   updateActiveNav();
@@ -793,13 +828,24 @@ topicList.addEventListener("click", (event) => {
 
 contentPanel.addEventListener("click", (event) => {
   const glossaryLink = event.target.closest("a[data-glossary-id]");
-  if (!glossaryLink) return;
+  if (glossaryLink) {
+    event.preventDefault();
+    highlightedGlossaryId = glossaryLink.dataset.glossaryId;
+    renderGlossary(glossaryEntries.filter((entry) => matchesGlossary(entry, normalize(searchInput.value.trim()))), searchInput.value.trim());
+
+    const target = document.getElementById(`glossary-${highlightedGlossaryId}`);
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    return;
+  }
+
+  const internalLink = event.target.closest("a[href^='#module-']");
+  if (!internalLink) return;
 
   event.preventDefault();
-  highlightedGlossaryId = glossaryLink.dataset.glossaryId;
-  renderGlossary(glossaryEntries.filter((entry) => matchesGlossary(entry, normalize(searchInput.value.trim()))), searchInput.value.trim());
-
-  const target = document.getElementById(`glossary-${highlightedGlossaryId}`);
+  const target = document.querySelector(internalLink.getAttribute("href"));
   if (target) {
     target.scrollIntoView({ behavior: "smooth", block: "start" });
   }
