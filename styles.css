@@ -330,16 +330,10 @@ body {
   font-size: clamp(1.8rem, 3vw, 2.8rem);
 }
 
-.content-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 20px;
-}
-
 .module-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 20px;
+  grid-template-columns: 1fr;
+  gap: 26px;
 }
 
 .glossary-shell {
@@ -357,7 +351,7 @@ body {
 .section-card {
   display: grid;
   gap: 18px;
-  padding: 24px;
+  padding: 22px;
   background: var(--card);
   transition: transform 180ms ease, border-color 180ms ease;
 }
@@ -385,6 +379,17 @@ body {
   transform: translateY(-2px);
 }
 
+.module-block {
+  display: grid;
+  gap: 18px;
+}
+
+.module-topic-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
 .section-topline {
   display: flex;
   justify-content: space-between;
@@ -402,18 +407,12 @@ body {
 }
 
 .module-intro,
-.topic-module-note,
 .topic-context,
 .topic-value,
 .topic-example {
   margin: 0;
   color: var(--muted);
   line-height: 1.55;
-}
-
-.topic-links-group {
-  padding-top: 2px;
-  border-top: 1px solid rgba(31, 26, 22, 0.08);
 }
 
 .subsection-group {
@@ -543,7 +542,7 @@ body {
   .page-shell,
   .hero-card,
   .principles-strip,
-  .content-grid,
+  .module-topic-grid,
   .module-grid,
   .glossary-grid {
     grid-template-columns: 1fr;

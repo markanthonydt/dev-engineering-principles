@@ -332,7 +332,9 @@ const sectionBlueprints = [
 const sections = sectionBlueprints.flatMap((blueprint) =>
   blueprint.topics.map(([title, summary], index) => ({
     id: `${blueprint.slug}-${index + 1}`,
+    slug: blueprint.slug,
     tag: blueprint.tag,
+    topicIndex: index,
     title,
     summary,
     principles: blueprint.principles,
@@ -352,6 +354,529 @@ const moduleOverviews = {
   Reliability: "How to observe, deploy, recover, and operate systems safely in production.",
   Teamwork: "How to review, document, and coordinate changes so quality compounds across people.",
   "AI Workflow": "How to use Codex and reasoning models as leverage without giving up engineering judgment."
+};
+
+const topicDeepening = {
+  Foundation: [
+    {
+      build: "Start by identifying the real system boundary. That includes users, data stores, external services, deployment shape, support workflow, and operational constraints, not just the file you are editing.",
+      why: "This matters because most costly mistakes happen when engineers solve the nearest symptom while the real leverage sits somewhere else in the system.",
+      example: "If a page is slow, the cause may be query design, cache invalidation, a queue backlog, or an API dependency rather than the component doing the rendering."
+    },
+    {
+      build: "A problem statement should describe the failure or opportunity in observable terms. Avoid jumping straight to implementation language before the problem is stable.",
+      why: "Teams that frame problems well can change approach without reopening the whole conversation every time a design idea fails.",
+      example: "Instead of saying 'we need Redis here', say 'we need repeated reads to stay under 100ms without stale results causing incorrect user balances'."
+    },
+    {
+      build: "Constraints are not annoyances to work around later. They are inputs that shape architecture, rollout strategy, staffing needs, and acceptable complexity from the start.",
+      why: "Naming the dominant constraint early prevents wasted design work on solutions that cannot survive the real environment.",
+      example: "A compliance deadline, mobile bandwidth limit, or thin support team may justify a simpler design than the one that looks most elegant in isolation."
+    },
+    {
+      build: "Outcome-driven engineering asks what changed for the user or system after the work shipped. It separates visible value from engineering activity.",
+      why: "This prevents teams from mistaking code volume, issue count, or refactor size for actual progress.",
+      example: "A successful reliability project reduces incident count, mean recovery time, or failed orders, not just adds retries and dashboards."
+    },
+    {
+      build: "Tradeoff awareness means saying what a design buys and what it costs: latency, readability, portability, operability, or team learning curve.",
+      why: "When tradeoffs stay implicit, teams drift into accidental complexity and later argue about symptoms instead of decisions.",
+      example: "Caching may reduce latency but can increase stale-data risk, invalidation logic, and operational debugging cost."
+    },
+    {
+      build: "Maintainability is the cost curve of future change. A fast solution can still be bad if every follow-up requires heroic understanding to modify safely.",
+      why: "Long-lived systems are changed more often than they are first written, so structural clarity compounds over time.",
+      example: "A duplicated but readable path can be cheaper long-term than a clever abstraction that every new teammate misreads."
+    },
+    {
+      build: "Failure-oriented thinking starts by asking how the system breaks: partial outage, malformed input, duplicate delivery, timeout, bad migration, or human error.",
+      why: "This produces stronger designs because failure handling gets designed in before it becomes production improvisation.",
+      example: "Before adding a new payment retry, decide what happens if the first request succeeded but the confirmation response was lost."
+    },
+    {
+      build: "Engineering judgment is the ability to choose when to follow a pattern and when local context justifies an exception.",
+      why: "Pattern obedience without context can be as dangerous as ad hoc design with no standards at all.",
+      example: "A microservice split may match a fashionable pattern but still be wrong if the team lacks the observability and ownership model to operate it."
+    },
+    {
+      build: "Context loading means understanding history, neighboring systems, and current operational reality before editing code or proposing architecture.",
+      why: "Without context, even well-written code changes can be aimed at a stale model of the system.",
+      example: "Read the incident notes, migration docs, or recent PR discussions before refactoring a path that has repeatedly failed in production."
+    },
+    {
+      build: "Working agreements are explicit shared defaults on quality, review, testing, ownership, and deployment safety.",
+      why: "Good teams reduce friction not only with skill but with stable expectations that prevent the same coordination debate from recurring.",
+      example: "Agreeing that risky changes require rollback notes and tests in the same change prevents last-minute disagreement during release."
+    }
+  ],
+  Planning: [
+    {
+      build: "Requirements before code means pinning down behavior and constraints before scaffolding. It does not require full specification, but it does require a stable target.",
+      why: "This reduces rework because the first version is aimed at the right problem rather than merely being fast to produce.",
+      example: "Before building an approval flow, define who can approve, what states exist, which actions are reversible, and which actions must be audited."
+    },
+    {
+      build: "Acceptance criteria turn a fuzzy request into observable checks. They should say what must happen, under what conditions, and what counts as failure.",
+      why: "They improve alignment across engineering, product, QA, and review because everyone can test the same claim.",
+      example: "A good criterion says 'draft saves without notifying approvers' rather than 'draft mode works as expected'."
+    },
+    {
+      build: "Non-goals protect the work from accidental expansion. They tell the team what will intentionally remain out of scope in this iteration.",
+      why: "This is useful because many projects slip not from one big decision but from small, reasonable extras that accumulate unnoticed.",
+      example: "A v1 reporting project might explicitly exclude custom export formats, cross-team permissions, or historical backfill."
+    },
+    {
+      build: "Delivery slicing means breaking work into increments that are independently valuable, testable, and reviewable.",
+      why: "Smaller slices create earlier feedback and lower rollback cost when a direction turns out to be wrong.",
+      example: "Ship read-only visibility first, then editing, then notifications, instead of one giant feature branch."
+    },
+    {
+      build: "Dependency mapping identifies what must exist before the change works and what downstream systems will react to it once it ships.",
+      why: "This prevents surprises during rollout, integration, and ownership handoff.",
+      example: "A schema change may affect ETL jobs, dashboards, exports, mobile clients, and operational runbooks, not just the writing service."
+    },
+    {
+      build: "Risk-based planning means proving the scariest assumptions first. Unknowns that could kill the whole design deserve attention before safe implementation details.",
+      why: "This improves execution because the team learns early whether the plan is viable instead of discovering it after most of the code is written.",
+      example: "Prototype the third-party rate limit or browser performance limit before polishing internal abstractions."
+    },
+    {
+      build: "Definition of done should include behavior, checks, documentation, and operational readiness where appropriate.",
+      why: "Without this, teams stop at 'code exists' and leave the expensive last 20 percent to whoever touches the feature next.",
+      example: "A deployment is not done if the feature works locally but has no alerting, no migration notes, and no reviewer can explain the rollback path."
+    },
+    {
+      build: "Migration planning is about how the system moves from old shape to new shape without corrupting data or breaking consumers mid-transition.",
+      why: "Transition failures are common because engineers over-focus on the target design and under-design the path to get there.",
+      example: "Run a dual-write period, backfill old records, verify parity, then remove the legacy path only after consumers have switched."
+    },
+    {
+      build: "Backlog hygiene means tasks are written clearly enough that someone else can start the work without inventing the requirement from scratch.",
+      why: "Poor backlog quality creates false progress: tickets move, meetings happen, but the system learns very little.",
+      example: "Rewrite 'improve onboarding' into concrete slices like validation errors, step persistence, analytics gaps, and confirmation emails."
+    },
+    {
+      build: "Estimation discipline is about expressing uncertainty honestly. Good estimates communicate confidence range and risk, not fake precision.",
+      why: "This helps stakeholders make better decisions about sequencing and scope instead of relying on optimistic guesses dressed up as plans.",
+      example: "Say 'two to four days depending on migration risk' when the dependency is real instead of committing to one exact number too early."
+    }
+  ],
+  "Code Quality": [
+    {
+      build: "Readability and local simplicity mean a future reader can explain the code path without loading half the system into their head first.",
+      why: "This matters because incident response, reviews, and maintenance all happen under time pressure, not ideal calm conditions.",
+      example: "A direct conditional with named branches is often better than a compact abstraction that hides why a case is special."
+    },
+    {
+      build: "Naming is design because names decide how quickly a reader can recover intent from code. A weak name forces readers to inspect implementation every time.",
+      why: "Good names reduce cognitive overhead and make bugs easier to spot because mismatches become visible sooner.",
+      example: "Rename `processData` to `reconcileInvoiceTotals` if that is what the function really does."
+    },
+    {
+      build: "Controlling complexity means isolating it where it is unavoidable and removing it where it is accidental.",
+      why: "Complexity compounds. A little hidden branching, a little shared state, and a little vague ownership quickly become a fragile system.",
+      example: "Move special-case branching into one explicit policy object instead of scattering flags through unrelated helpers."
+    },
+    {
+      build: "Abstraction boundaries should hide repeated complexity, not important behavior. The reader should still know what guarantees and costs exist.",
+      why: "Bad abstractions make code shorter while making reasoning harder, which is usually the wrong trade.",
+      example: "A helper that silently retries, swallows errors, and mutates shared state is not an abstraction; it is hidden behavior."
+    },
+    {
+      build: "Module cohesion means code that changes for the same reason stays together. Mixed responsibilities usually point to a weak boundary.",
+      why: "High cohesion lowers surprise because readers can trust that a unit has one main job.",
+      example: "Do not place pricing rules, email formatting, and database cleanup in the same service object just because the same endpoint calls them."
+    },
+    {
+      build: "Coupling management is about reducing how much one piece of code must know about another piece's internals.",
+      why: "Lower coupling makes testing easier and lets teams change local behavior without global fear.",
+      example: "Depend on a clear interface that returns domain-level results instead of reaching through multiple layers of object internals."
+    },
+    {
+      build: "State discipline means being deliberate about where mutable data lives, who owns it, and when it can change.",
+      why: "Loose state is one of the main sources of heisenbugs, race conditions, and hard-to-reproduce behavior.",
+      example: "Prefer deriving UI state from a single source of truth instead of letting several components each maintain slightly different copies."
+    },
+    {
+      build: "Refactoring strategy works best when the behavior boundary is clear and the structural change is narrow.",
+      why: "This keeps the team learning from each change instead of hiding structural and behavioral changes inside one large rewrite.",
+      example: "First extract a dependency boundary, then rename concepts, then move logic across files, rather than doing all three at once."
+    },
+    {
+      build: "Code comments are most valuable when they preserve intent, invariants, or caveats that are not obvious from syntax alone.",
+      why: "Good comments reduce archaeology work. Bad comments duplicate code and become stale.",
+      example: "Explain that a timeout value matches an external provider contract instead of commenting that a variable stores a timeout."
+    },
+    {
+      build: "Deletion as improvement means recognizing when removing code, options, or branches increases quality more than refining them.",
+      why: "Every line has a maintenance cost. A smaller system is often safer than a more flexible but less understood one.",
+      example: "Drop an unused configuration mode rather than carrying permanent branching for a workflow nobody uses."
+    }
+  ],
+  Verification: [
+    {
+      build: "Correctness and tests are about proving behavior from the outside in, not just exercising lines of code.",
+      why: "A test suite only creates confidence if it checks the things users and operators actually depend on.",
+      example: "Verify that a failed payment is retried exactly once and logged, not just that the retry helper was invoked."
+    },
+    {
+      build: "Boundary testing targets limits, empty cases, malformed input, and transition edges where assumptions often break.",
+      why: "Bugs cluster at edges because those are the places least exercised by optimistic mental models.",
+      example: "Test zero items, one item, maximum items, duplicate items, and expired items instead of only a normal list."
+    },
+    {
+      build: "Regression prevention means every real bug teaches the system how not to fail the same way again.",
+      why: "This builds durable knowledge into the codebase rather than leaving it only in people’s memories.",
+      example: "After fixing a timezone parsing bug, add a test with the exact failing locale and boundary date."
+    },
+    {
+      build: "Test pyramid judgment is about balancing fast feedback with realistic coverage. Not everything belongs in one layer.",
+      why: "Too many slow tests kill iteration speed; too many shallow tests create false confidence.",
+      example: "Use unit tests for branching rules, integration tests for persistence contracts, and a few end-to-end tests for critical flows."
+    },
+    {
+      build: "Deterministic tests fail for one clear reason and produce the same result under the same inputs every time.",
+      why: "Flaky tests teach engineers to ignore signals, which quietly destroys trust in the suite.",
+      example: "Control time, randomness, and external calls instead of letting tests depend on wall clock timing or network state."
+    },
+    {
+      build: "Fixtures and test data should expose the condition under test rather than bury it in giant helper setup.",
+      why: "Readable tests are easier to debug and safer to change when the implementation evolves.",
+      example: "Name a fixture `expiredSubscription` if expiration is the point of the test instead of loading a huge generic account blob."
+    },
+    {
+      build: "Contract testing focuses on what one system promises another, especially where teams deploy independently.",
+      why: "It catches interface drift before production becomes the first integration environment.",
+      example: "Verify that the consumer still handles optional fields, error shapes, and versioned responses correctly."
+    },
+    {
+      build: "Manual verification is still valuable when the risk is visual, experiential, or hard to simulate cheaply.",
+      why: "Not every high-value check needs automation immediately, especially if the workflow is new or still changing quickly.",
+      example: "Walk the onboarding flow on mobile after a CSS or state-management change even if unit tests are green."
+    },
+    {
+      build: "Quality gates should block expensive failures, not force noise-level perfection on every edit.",
+      why: "A gate that stops real regressions is useful. A gate that encourages meaningless busywork gets bypassed mentally if not technically.",
+      example: "Require tests and lint on critical services, but do not block a docs fix because an unrelated flaky integration suite failed."
+    },
+    {
+      build: "Test maintenance means pruning duplication, clarifying failing assertions, and updating the suite as the system evolves.",
+      why: "Untended tests become another legacy system: expensive, fragile, and poorly understood.",
+      example: "Delete three overlapping UI tests after adding a single clearer integration test that covers the same user outcome."
+    }
+  ],
+  Execution: [
+    {
+      build: "Debugging by evidence means collecting signals that narrow uncertainty before reaching for a patch.",
+      why: "It reduces the risk of solving the wrong problem and helps future engineers understand why the fix was correct.",
+      example: "Capture inputs, state, and downstream responses from a failing request before changing retry logic."
+    },
+    {
+      build: "Reproduction first means establishing a stable failing case or at least a credible simulation before trusting any fix.",
+      why: "Without reproduction, it is hard to know whether the change solved the bug or simply changed the conditions around it.",
+      example: "Create a fixture or CLI call that triggers the malformed record instead of re-running the full job blindly."
+    },
+    {
+      build: "Instrumentation strategy is the temporary or permanent observability you add to answer the next unknown question.",
+      why: "Good instrumentation shortens incident time because it converts guesses into evidence with each step.",
+      example: "Add correlation IDs and branch-specific logs around the suspected path rather than spraying generic print statements everywhere."
+    },
+    {
+      build: "Hypothesis ranking means ordering likely causes by evidence, probability, and blast radius of being wrong.",
+      why: "This prevents debugging sessions from turning into random walks through the system.",
+      example: "Test 'cache entry never invalidates' before 'database driver is fundamentally broken' if the symptoms fit and the check is cheap."
+    },
+    {
+      build: "Minimal reproduction strips the failing behavior away from unrelated application noise.",
+      why: "A smaller failure surface makes it easier to isolate the real assumption that broke.",
+      example: "Reduce a data import bug to one bad row and one parsing function instead of re-running the entire partner feed."
+    },
+    {
+      build: "Change isolation means modifying one meaningful thing at a time so you can learn from the outcome.",
+      why: "When several variables move at once, you lose the ability to tell which intervention mattered.",
+      example: "Do not change timeout values, retry counts, and cache keys in one incident patch unless you truly have no safer alternative."
+    },
+    {
+      build: "Root cause analysis asks what condition made the visible failure possible in the first place.",
+      why: "This matters because symptom fixes often reduce noise temporarily while leaving recurrence intact.",
+      example: "If a worker crashes on null input, the root cause may be missing upstream validation, not just the uncaught exception itself."
+    },
+    {
+      build: "Incident discipline is the operating rhythm for production trouble: stabilize, narrow impact, communicate clearly, then learn.",
+      why: "A structured response reduces panic and prevents communication debt from becoming its own operational problem.",
+      example: "Assign one person to mitigation, one to evidence gathering, and one to communication during a live incident."
+    },
+    {
+      build: "Rollback judgment means recognizing when restoring the last good state is safer than forcing a patch under pressure.",
+      why: "Rolling back preserves time and optionality when confidence is low and user impact is rising.",
+      example: "If a deployment corrupted queue processing and the root cause is still unclear, revert first and investigate second."
+    },
+    {
+      build: "Postmortem quality is about producing changes in systems and process, not just a written timeline.",
+      why: "A good postmortem turns one painful event into durable operational improvement.",
+      example: "End with concrete actions like adding a runbook, changing an alert threshold, or redesigning a risky migration step."
+    }
+  ],
+  Engineering: [
+    {
+      build: "Performance with measurement starts by identifying whether the problem is latency, throughput, cost, memory pressure, or variability.",
+      why: "Without a target metric, optimization often produces complexity without meaningful gain.",
+      example: "Decide whether users feel slow response time or operators feel queue buildup before tuning code paths."
+    },
+    {
+      build: "Profiling and bottleneck analysis find the real limiting step instead of the loudest or most visible function.",
+      why: "The intuition about where time goes is frequently wrong in systems with I/O, allocation, or serialization overhead.",
+      example: "Profile the request path and discover that JSON encoding dominates time rather than the domain calculation you were about to rewrite."
+    },
+    {
+      build: "Algorithmic thinking asks how work grows as data size, concurrency, or fan-out grows.",
+      why: "Big wins usually come from eliminating unnecessary work, not micro-optimizing the final loop.",
+      example: "Replace repeated linear scans with pre-indexing when the request touches thousands of records."
+    },
+    {
+      build: "Concurrency safety is about preserving correctness when work overlaps in time.",
+      why: "Parallel execution can improve throughput while making ordering, locking, and state visibility much harder to reason about.",
+      example: "A background job and a user action updating the same record need a conflict strategy, not just more workers."
+    },
+    {
+      build: "Caching strategy means choosing what to store, how fresh it must be, who invalidates it, and what happens on misses or stale reads.",
+      why: "Cache complexity is justified only when the read gain outweighs the correctness and debugging cost.",
+      example: "Cache a derived product catalog for minutes, but keep payment eligibility live if stale answers would create financial risk."
+    },
+    {
+      build: "Resource efficiency covers CPU, memory, network, disk, and external service quotas as first-class constraints.",
+      why: "Systems often fail because they waste a limited resource long before the business logic itself is wrong.",
+      example: "A chatty API may look correct in tests but collapse under mobile bandwidth limits and rate caps in production."
+    },
+    {
+      build: "Scalability boundaries identify the part of the design that will fail first as load grows: locking, data shape, coordination, or human operations.",
+      why: "This lets teams plan targeted redesign instead of assuming horizontal scale will save a fundamentally serialized path.",
+      example: "A nightly batch with one global lock will not scale just because the workers run in more containers."
+    },
+    {
+      build: "Latency budgets allocate response-time expectations across subsystems so the team knows where time can be spent safely.",
+      why: "Without budgets, each layer behaves reasonably in isolation while the end-to-end experience still becomes slow.",
+      example: "If the page budget is 300ms, the API, query, and render layers cannot each casually consume 250ms."
+    },
+    {
+      build: "Resilience patterns like retries, timeouts, and backpressure need coordination or they amplify failure instead of reducing it.",
+      why: "Poorly designed resilience can turn a partial outage into a cascading one.",
+      example: "Three services each retrying aggressively can triple load on the one dependency that is already struggling."
+    },
+    {
+      build: "Technical debt management means deciding which compromises are intentional, visible, and worth paying down.",
+      why: "Debt becomes dangerous when it is invisible or denied, because then it cannot be scheduled against other priorities.",
+      example: "Record that a temporary denormalized write path exists because migration speed mattered more than elegance, and set the condition for revisiting it."
+    }
+  ],
+  Design: [
+    {
+      build: "Interfaces and API design shape how safely and clearly the rest of the system can use a capability.",
+      why: "A confusing boundary forces every caller to rediscover rules that should have been made explicit once.",
+      example: "An endpoint that mixes creation, update, and side effects behind flags is harder to reason about than two clearer operations."
+    },
+    {
+      build: "Contract clarity means consumers can understand required inputs, outputs, failure modes, and invariants without reading implementation internals.",
+      why: "Clear contracts reduce integration errors and make refactoring safer because the real promises are visible.",
+      example: "Document whether missing data is returned as null, an empty collection, or a typed error before clients guess differently."
+    },
+    {
+      build: "Versioning strategy decides how the system evolves without surprising existing consumers.",
+      why: "Change is inevitable; accidental breaking change is optional.",
+      example: "Add new fields in a backward-compatible way first, then deprecate old ones with a migration window rather than flipping both at once."
+    },
+    {
+      build: "Error design treats failures as part of the interface, not just exceptional noise.",
+      why: "Good errors shorten diagnosis and help callers decide whether to retry, correct input, or surface a user message.",
+      example: "Return a validation error with field-level detail instead of a generic 400 that forces client-side guesswork."
+    },
+    {
+      build: "Schema evolution is about changing stored or transmitted data while multiple versions of the system coexist.",
+      why: "Data shapes outlive single deployments, so transitions need forward and backward tolerance.",
+      example: "Write new fields in an additive way, backfill old records, and keep readers tolerant until the migration is complete."
+    },
+    {
+      build: "Idempotency ensures repeated requests do not accidentally duplicate important effects.",
+      why: "Retries, user refreshes, and network uncertainty are normal, so repeating a safe action should stay safe.",
+      example: "A payment confirmation endpoint should recognize a repeated request key and return the original result rather than charge twice."
+    },
+    {
+      build: "State machines make workflows explicit by defining allowed states and valid transitions.",
+      why: "They reduce hidden edge cases because the workflow is modeled directly instead of being scattered across conditionals.",
+      example: "An order cannot jump from draft to shipped if approval and payment states are explicit and enforced."
+    },
+    {
+      build: "Configuration design should make valid setups obvious and dangerous combinations hard to express.",
+      why: "Operational mistakes often enter through configuration because it is treated as less important than code.",
+      example: "Prefer enum-style modes and validated ranges over a loose set of booleans that interact in undocumented ways."
+    },
+    {
+      build: "CLI and tool UX matter because internal tools are part of the engineering system and shape daily error rate.",
+      why: "A hard-to-use tool increases accidental misuse, slows onboarding, and creates hidden support cost.",
+      example: "Provide dry-run output, clear failure messages, and consistent subcommand naming for deployment or migration tools."
+    },
+    {
+      build: "Documentation as interface means examples, caveats, and defaults are part of the product surface.",
+      why: "Most consumers learn by trying examples before they deeply understand the abstraction.",
+      example: "Show one good request, one invalid request, and one migration note next to the API rather than hiding all nuance in prose."
+    }
+  ],
+  Reliability: [
+    {
+      build: "Operations and observability begin with the assumption that production behavior must be explainable after the fact, not only while coding.",
+      why: "If the system cannot answer basic runtime questions, every incident becomes manual archaeology.",
+      example: "A request path should let you trace who triggered it, what dependencies were called, and where latency accumulated."
+    },
+    {
+      build: "Logging for decisions means logs are written to answer likely operational questions, not merely to mirror control flow.",
+      why: "Useful logs reduce diagnosis time because they preserve the branching context and identifiers needed to follow a failure.",
+      example: "Log account ID, request ID, and decision reason when rejecting a workflow step, not just 'validation failed'."
+    },
+    {
+      build: "Metrics and SLOs connect system behavior to thresholds and ownership. A metric alone is only a number.",
+      why: "Attaching service expectations to metrics helps teams know when to act and what 'good enough' means.",
+      example: "Track checkout success rate against an agreed SLO rather than watching raw request counts with no decision rule."
+    },
+    {
+      build: "Tracing and causality let you understand one user action as it crosses multiple services or asynchronous steps.",
+      why: "This is useful because distributed systems fail through interactions, not just isolated functions.",
+      example: "A single trace can show whether slowness came from auth, a downstream pricing call, or a retry storm in the worker layer."
+    },
+    {
+      build: "Rollout safety means exposure happens gradually enough that bad behavior can be detected before it becomes a full incident.",
+      why: "Safer rollouts reduce blast radius and preserve time to respond while confidence is still low.",
+      example: "Release to internal users, then 5 percent of traffic, verify health signals, then expand instead of flipping globally."
+    },
+    {
+      build: "Recovery planning is the explicit design of how the system returns to a good state after partial failure.",
+      why: "A system that can fail safely and recover predictably is more valuable than one that only looks good on the happy path.",
+      example: "Know how to replay missed jobs, revert a migration, or pause consumers before the first bad deploy happens."
+    },
+    {
+      build: "Alert design is about making operational interruption precise and actionable.",
+      why: "Noisy or vague alerts train teams to distrust the channel that should protect production quality.",
+      example: "Alert on sustained checkout error rate above threshold with service ownership and dashboard links, not every isolated 500."
+    },
+    {
+      build: "Operational runbooks package diagnosis and mitigation steps for recurring classes of problems.",
+      why: "They shorten recovery time and reduce dependency on the one engineer who happens to remember the incident history.",
+      example: "Include what to check first, how to verify impact, rollback steps, and what signals indicate the system is healthy again."
+    },
+    {
+      build: "Security basics are foundational reliability concerns because insecure systems become unavailable, corrupted, or untrustworthy systems.",
+      why: "Least privilege, validation, and dependency hygiene reduce both exploit risk and operational chaos.",
+      example: "Validate external payloads, limit service credentials, and review dependency updates instead of assuming internal traffic is always safe."
+    },
+    {
+      build: "Compliance and auditability require change history and access decisions to remain reconstructable later.",
+      why: "This matters not only for regulators but for internal trust when sensitive workflows or data changes are questioned.",
+      example: "Record who approved a privileged action, what data changed, and what version of the system performed it."
+    }
+  ],
+  Teamwork: [
+    {
+      build: "Collaboration and review treat software quality as a shared activity rather than a solo coding outcome.",
+      why: "Most costly failures survive because no one outside the author could quickly understand or challenge the change in time.",
+      example: "A reviewer should be able to restate what changed, why it is safe, and what would break if the assumptions are wrong."
+    },
+    {
+      build: "Small diffs are easier to reason about because intent and risk stay visible.",
+      why: "Review quality drops sharply when unrelated concerns, broad refactors, and behavior changes are mixed together.",
+      example: "Split renaming, structural cleanup, and feature logic into separate reviews if doing so makes correctness easier to inspect."
+    },
+    {
+      build: "Review priorities should start with correctness, regressions, and maintainability before style preferences.",
+      why: "The point of review is to improve system safety and team understanding, not only to enforce aesthetic consistency.",
+      example: "Ask whether the change handles retry behavior correctly before debating variable naming or blank-line style."
+    },
+    {
+      build: "Commit hygiene means each commit preserves a coherent idea that future engineers can inspect or revert meaningfully.",
+      why: "Good history reduces debugging and rollback pain because the past remains legible.",
+      example: "Do not bury a migration fix inside the same commit as formatting cleanup and documentation changes."
+    },
+    {
+      build: "Knowledge sharing is the process of moving important context out of one person’s head and into reusable team artifacts.",
+      why: "Teams scale by reducing private knowledge dependency, especially in critical systems.",
+      example: "Write down the weird cache invariant or rollout caveat once instead of re-explaining it in every future review thread."
+    },
+    {
+      build: "Handoffs should preserve not just status but reasoning: what was tried, what remains risky, and what assumptions are still open.",
+      why: "This lowers restart cost when work moves across time zones, priorities, or ownership changes.",
+      example: "A useful handoff says which logs were checked, what repro exists, and what rollback state is safe, not only 'still debugging'."
+    },
+    {
+      build: "Mentoring through code means using implementation and review as vehicles for teaching judgment, not just fixing the current patch.",
+      why: "This compounds team quality because better reasoning scales beyond the immediate task.",
+      example: "Explain why a change increases coupling or hides state instead of only asking for a different function name."
+    },
+    {
+      build: "Decision records capture the why behind non-obvious choices so future refactors do not casually undo important constraints.",
+      why: "Without some lightweight record, teams repeat old debates or remove safeguards they no longer recognize.",
+      example: "Note why an eventually consistent path was chosen so a later engineer does not mistake it for accidental looseness."
+    },
+    {
+      build: "Cross-functional alignment keeps engineering from solving the wrong problem beautifully.",
+      why: "Product, design, operations, and compliance assumptions shape what good engineering looks like in practice.",
+      example: "Before redesigning approval flow states, confirm whether support, audit, and UX requirements agree on what 'rejected' means."
+    },
+    {
+      build: "Sustainable pace is an engineering quality concern because exhausted teams create fragile systems and poor decision loops.",
+      why: "Pace that depends on constant urgency usually borrows reliability and maintainability from the future.",
+      example: "A team shipping every week with focused scope and clear rollback beats a team shipping heroically after recurring crunch."
+    }
+  ],
+  "AI Workflow": [
+    {
+      build: "Using Codex well means treating it as a fast collaborator that still needs scoped prompts, codebase context, and verification.",
+      why: "When the request is well-framed, assistants can accelerate implementation and review without replacing judgment.",
+      example: "Ask for architecture summary, likely blast radius, and safest small change before requesting a direct code edit."
+    },
+    {
+      build: "Prompt precision reduces wasted iteration by making the problem, constraints, and expected output shape explicit.",
+      why: "Vague prompts invite generic output, which then has to be corrected in expensive back-and-forth.",
+      example: "Specify files, behavioral goals, test expectations, and what not to change instead of asking to 'improve this feature'."
+    },
+    {
+      build: "Context loading for AI means giving the assistant the right local code, docs, and operational constraints before asking it to act.",
+      why: "The quality of the output is bounded by the quality of the context you allow it to reason over.",
+      example: "Have the model inspect the relevant service, schema, and existing tests before proposing a migration plan."
+    },
+    {
+      build: "Scoped generation keeps changes reviewable and lowers the chance that one prompt rewrites more of the system than intended.",
+      why: "Smaller generated diffs are easier to validate and safer to reject or refine if assumptions are wrong.",
+      example: "Generate one endpoint update and its tests first, not the whole feature plus unrelated refactors in a single step."
+    },
+    {
+      build: "AI-assisted refactoring works best when behavior is already protected by tests or clear acceptance criteria.",
+      why: "Otherwise the assistant may improve structure while quietly altering behavior nobody explicitly locked down.",
+      example: "Before asking for a large extract-and-rename refactor, add tests that describe the current invariants and failure cases."
+    },
+    {
+      build: "AI for reviews is often higher leverage than AI for authorship because models are good at surfacing inconsistencies and missing checks.",
+      why: "Review prompts tend to narrow the task and reduce the risk of sprawling unsupported invention.",
+      example: "Ask the assistant to list likely regressions, missing tests, and assumptions in a diff before requesting any rewrite."
+    },
+    {
+      build: "AI for documentation can convert implementation knowledge into explanations, examples, and handoff notes quickly.",
+      why: "This is useful when the code is correct but the surrounding context is still too expensive for humans to restate from scratch.",
+      example: "Generate a rollout checklist or module overview from the accepted design and then edit it for accuracy."
+    },
+    {
+      build: "Hallucination management means assuming confidence and correctness are separate until proven otherwise.",
+      why: "Fluent incorrect output is still incorrect, and models are especially risky around unstated assumptions or stale context.",
+      example: "Verify every claim about APIs, configs, migrations, or tests against the repository and actual execution before trusting it."
+    },
+    {
+      build: "Verification loops are the structured cycle of inspect, propose, implement, and verify before widening scope again.",
+      why: "This keeps AI use grounded in evidence and prevents momentum from outrunning correctness.",
+      example: "After a generated patch, run the relevant tests, inspect the changed files, and only then ask for the next increment."
+    },
+    {
+      build: "Human judgment remains primary for architecture, risk tolerance, and final acceptance even when the assistant produced most of the draft.",
+      why: "Responsibility for safety and fitness still belongs to the engineer, not the tool.",
+      example: "Use Codex to surface options, but choose the design based on business context, operational reality, and maintainability tradeoffs."
+    }
+  ]
 };
 
 const glossaryEntries = [
@@ -547,7 +1072,6 @@ const glossaryRegex = new RegExp(`\\b(${glossaryPatterns.sort((a, b) => b.length
 const searchInput = document.querySelector("#search-input");
 const topicList = document.querySelector("#topic-list");
 const moduleGrid = document.querySelector("#module-grid");
-const contentGrid = document.querySelector("#content-grid");
 const glossaryGrid = document.querySelector("#glossary-grid");
 const matchCount = document.querySelector("#match-count");
 const resultsTitle = document.querySelector("#results-title");
@@ -657,55 +1181,12 @@ function groupSectionsByTag(items) {
   return [...groups.entries()];
 }
 
-function buildTopicContext(section) {
-  const contexts = {
-    Foundation: `${section.title} is about reading the problem in its full setting instead of treating the current code file as the entire problem. It asks you to understand surrounding constraints, system boundaries, and the assumptions hidden behind the visible task.`,
-    Planning: `${section.title} turns loose intent into concrete delivery work. In practice that means clarifying outcomes, reducing ambiguity, and making sure the team can tell whether the change is actually done.`,
-    "Code Quality": `${section.title} focuses on how code feels to read, change, and trust over time. It is less about style polish and more about whether behavior, ownership, and structure are easy to understand under pressure.`,
-    Verification: `${section.title} is about building confidence with evidence. It treats checks, tests, and validation steps as part of the implementation rather than something added only at the end.`,
-    Execution: `${section.title} covers what to do when you are in motion: debugging, incident handling, and narrowing uncertainty. The emphasis is on disciplined investigation instead of reactive patching.`,
-    Engineering: `${section.title} deals with technical tradeoffs that become visible at scale or under load. It asks you to connect implementation choices to latency, throughput, resilience, resource use, and long-term maintenance cost.`,
-    Design: `${section.title} is about shaping interfaces, workflows, or contracts so other people and systems can use them safely. It treats clarity at the boundary as a design responsibility, not an afterthought.`,
-    Reliability: `${section.title} looks at what happens after code ships. It focuses on whether the system can be observed, rolled out safely, recovered, and operated without guesswork.`,
-    Teamwork: `${section.title} covers the social side of engineering quality. It recognizes that review, documentation, and handoff quality directly affect correctness, speed, and future maintenance.`,
-    "AI Workflow": `${section.title} explains how to use Codex or similar assistants as leverage without outsourcing engineering judgment. The theme is structured prompting, constrained generation, and verification loops.`
+function getTopicDeepening(section) {
+  return topicDeepening[section.tag]?.[section.topicIndex] ?? {
+    build: section.summary,
+    why: "This topic matters because it changes how safely and clearly future engineering work can be carried out.",
+    example: `Apply ${section.title.toLowerCase()} to one real workflow and document what becomes easier to explain, test, or operate afterward.`
   };
-
-  return contexts[section.tag] ?? section.summary;
-}
-
-function buildTopicValue(section) {
-  const values = {
-    Foundation: `This is useful because strong system framing prevents expensive local fixes that solve the wrong problem. It improves decision quality before implementation starts.`,
-    Planning: `This helps by reducing scope drift, rework, and handoff confusion. The clearer the plan, the less likely the team is to mistake motion for progress.`,
-    "Code Quality": `This helps future changes stay cheap. Readable, well-bounded code lowers review time, debugging time, and the chance that a safe change turns into a risky rewrite.`,
-    Verification: `This is useful because confidence based on evidence scales better than confidence based on intuition. It catches regressions earlier and makes behavior easier to trust.`,
-    Execution: `This helps teams move faster during uncertainty because it creates a repeatable method for finding root causes and testing hypotheses safely.`,
-    Engineering: `This is useful because performance and resilience problems are usually tradeoff problems. Better engineering judgment prevents complexity from being added without measurable benefit.`,
-    Design: `This helps consumers of the system make fewer mistakes. Strong interfaces reduce ambiguity, hidden coupling, and the cost of future evolution.`,
-    Reliability: `This is useful because production systems are only as good as their observability and recovery story. It reduces surprise during rollout, incidents, and operational change.`,
-    Teamwork: `This helps quality compound across multiple contributors. Better collaboration practices make reviews sharper, context clearer, and future maintenance less dependent on one person.`,
-    "AI Workflow": `This is useful because assistants amplify both good structure and bad assumptions. Strong AI workflow habits increase speed without giving up reviewability or correctness.`
-  };
-
-  return values[section.tag] ?? "This topic helps make engineering decisions easier to explain, verify, and maintain.";
-}
-
-function buildTopicExample(section) {
-  const examples = {
-    Foundation: `Example: before changing ${section.title.toLowerCase()}, sketch the services, data flow, and operational dependencies involved so you can see where the real constraint sits.`,
-    Planning: `Example: turn ${section.title.toLowerCase()} into acceptance criteria, explicit non-goals, and one small deliverable slice before opening implementation work.`,
-    "Code Quality": `Example: if a change around ${section.title.toLowerCase()} feels hard to explain in review, simplify the control flow, rename the moving parts, or split responsibilities before adding features.`,
-    Verification: `Example: for ${section.title.toLowerCase()}, add one happy-path check, one boundary condition, and one regression test tied to a realistic failure mode.`,
-    Execution: `Example: when working on ${section.title.toLowerCase()}, write down the top two hypotheses, add instrumentation that can separate them, and change only one variable at a time.`,
-    Engineering: `Example: for ${section.title.toLowerCase()}, measure baseline behavior first, define what metric should improve, and compare the complexity cost of each optimization option.`,
-    Design: `Example: for ${section.title.toLowerCase()}, write one ideal usage example and one misuse example. If the bad case looks easy to trigger, the interface probably needs tightening.`,
-    Reliability: `Example: before shipping work related to ${section.title.toLowerCase()}, decide what logs, metrics, traces, alerts, and rollback steps you would need if it failed in production.`,
-    Teamwork: `Example: when a change touches ${section.title.toLowerCase()}, keep the diff narrow, explain the risk areas in the change description, and answer likely reviewer questions up front.`,
-    "AI Workflow": `Example: ask Codex to inspect the codebase for ${section.title.toLowerCase()}, propose two options, implement the smallest safe one, and then verify it with tests or explicit checks.`
-  };
-
-  return examples[section.tag] ?? `Example: explain ${section.title.toLowerCase()} in one sentence, define the failure mode it prevents, and add one concrete check that proves the guidance is working.`;
 }
 
 function renderNav(items) {
@@ -751,12 +1232,31 @@ function fillList(listElement, items) {
   });
 }
 
-function renderModules(items) {
+function renderGuide(items) {
   moduleGrid.innerHTML = "";
 
-  groupSectionsByTag(items).forEach(([tag, groupedSections], index) => {
+  if (!items.length) {
+    resultsTitle.textContent = "No matching topics";
+    resultsSummary.textContent = "No topics matched the current search.";
+
+    const empty = document.createElement("article");
+    empty.className = "empty-state";
+    empty.innerHTML = `
+      <h3>No topics match.</h3>
+      <p>Try broader terms like <code>testing</code>, <code>review</code>, <code>debugging</code>, or <code>Codex</code>.</p>
+    `;
+    moduleGrid.append(empty);
+    return;
+  }
+
+  const groupedModules = groupSectionsByTag(items);
+
+  groupedModules.forEach(([tag, groupedSections]) => {
     const blueprint = sectionBlueprints.find((entry) => entry.tag === tag);
     if (!blueprint) return;
+
+    const moduleBlock = document.createElement("section");
+    moduleBlock.className = "module-block";
 
     const card = moduleTemplate.content.firstElementChild.cloneNode(true);
     card.id = `module-${blueprint.slug}`;
@@ -768,8 +1268,32 @@ function renderModules(items) {
     fillList(card.querySelector(".principles-list"), blueprint.principles);
     fillList(card.querySelector(".codex-list"), blueprint.codex);
     fillList(card.querySelector(".risk-list"), blueprint.risks);
-    moduleGrid.append(card);
+    const topicGrid = document.createElement("div");
+    topicGrid.className = "module-topic-grid";
+
+    groupedSections.forEach((section, index) => {
+      const card = template.content.firstElementChild.cloneNode(true);
+      const deepening = getTopicDeepening(section);
+
+      card.id = section.id;
+      card.querySelector(".section-tag").textContent = section.tag;
+      card.querySelector(".section-anchor").textContent = `Build ${String(index + 1).padStart(2, "0")}`;
+      card.querySelector(".section-title").innerHTML = linkifyText(section.title);
+      card.querySelector(".section-summary").innerHTML = linkifyText(section.summary);
+      card.querySelector(".topic-context").innerHTML = linkifyText(deepening.build);
+      card.querySelector(".topic-value").innerHTML = linkifyText(deepening.why);
+      card.querySelector(".topic-example").innerHTML = linkifyText(deepening.example);
+      topicGrid.append(card);
+    });
+
+    moduleBlock.append(card, topicGrid);
+    moduleGrid.append(moduleBlock);
   });
+
+  resultsTitle.textContent = items.length === sections.length ? "All modules" : "Filtered modules";
+  resultsSummary.textContent = items.length === sections.length
+    ? "Browse 10 modules with build-on entries that expand the fundamentals into practical engineering judgment."
+    : `Showing ${groupedModules.length} module${groupedModules.length === 1 ? "" : "s"} and ${items.length} build-on entr${items.length === 1 ? "y" : "ies"}.`;
 }
 
 function renderGlossary(items, query) {
@@ -807,43 +1331,6 @@ function renderGlossary(items, query) {
   });
 }
 
-function renderSections(items, query) {
-  contentGrid.innerHTML = "";
-
-  if (!items.length) {
-    moduleGrid.innerHTML = "";
-    resultsTitle.textContent = "No matching topics";
-    resultsSummary.textContent = `No topics matched "${query}".`;
-    const empty = document.createElement("article");
-    empty.className = "empty-state";
-    empty.innerHTML = `
-      <h3>No topics match.</h3>
-      <p>Try broader terms like <code>testing</code>, <code>review</code>, <code>debugging</code>, or <code>Codex</code>.</p>
-    `;
-    contentGrid.append(empty);
-    return;
-  }
-
-  items.forEach((section, index) => {
-    const card = template.content.firstElementChild.cloneNode(true);
-    card.id = section.id;
-    card.querySelector(".section-tag").textContent = section.tag;
-    card.querySelector(".section-anchor").textContent = `Topic ${String(index + 1).padStart(3, "0")}`;
-    card.querySelector(".section-title").innerHTML = linkifyText(section.title);
-    card.querySelector(".section-summary").innerHTML = linkifyText(section.summary);
-    card.querySelector(".topic-context").innerHTML = linkifyText(buildTopicContext(section));
-    card.querySelector(".topic-value").innerHTML = linkifyText(buildTopicValue(section));
-    card.querySelector(".topic-example").innerHTML = linkifyText(buildTopicExample(section));
-    card.querySelector(".topic-module-note").innerHTML = `Shared guidance for this topic lives in the <a class="term-link" href="#module-${section.id.replace(/-\d+$/, "")}">${section.tag}</a> module card above.`;
-    contentGrid.append(card);
-  });
-
-  resultsTitle.textContent = query ? "Filtered topics" : "All topics";
-  resultsSummary.textContent = query
-    ? `Showing ${items.length} topic${items.length === 1 ? "" : "s"} matching "${query}".`
-    : "Browse 10 modules and 100 topics on principles, engineering practices, and Codex workflows.";
-}
-
 function syncActiveSection() {
   const cards = [...contentGrid.querySelectorAll(".section-card")];
   if (!cards.length) return;
@@ -868,8 +1355,7 @@ function render(queryText = "") {
   matchCount.textContent = `${filtered.length} match${filtered.length === 1 ? "" : "es"}`;
   activeSectionId = filtered[0]?.id ?? "";
   renderNav(filtered);
-  renderModules(filtered);
-  renderSections(filtered, queryText.trim());
+  renderGuide(filtered);
   renderGlossary(filteredGlossary, queryText.trim());
   updateActiveNav();
   if (usesPageScroll()) {
@@ -910,17 +1396,6 @@ contentPanel.addEventListener("click", (event) => {
     }
 
     return;
-  }
-
-  const internalLink = event.target.closest("a[href^='#module-']");
-  if (!internalLink) return;
-
-  event.preventDefault();
-  highlightedModuleId = internalLink.getAttribute("href").slice(1);
-  renderModules(sections.filter((section) => matchesSection(section, normalize(searchInput.value.trim()))));
-  const target = document.getElementById(highlightedModuleId);
-  if (target) {
-    scrollToElement(target);
   }
 });
 
