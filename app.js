@@ -657,6 +657,57 @@ function groupSectionsByTag(items) {
   return [...groups.entries()];
 }
 
+function buildTopicContext(section) {
+  const contexts = {
+    Foundation: `${section.title} is about reading the problem in its full setting instead of treating the current code file as the entire problem. It asks you to understand surrounding constraints, system boundaries, and the assumptions hidden behind the visible task.`,
+    Planning: `${section.title} turns loose intent into concrete delivery work. In practice that means clarifying outcomes, reducing ambiguity, and making sure the team can tell whether the change is actually done.`,
+    "Code Quality": `${section.title} focuses on how code feels to read, change, and trust over time. It is less about style polish and more about whether behavior, ownership, and structure are easy to understand under pressure.`,
+    Verification: `${section.title} is about building confidence with evidence. It treats checks, tests, and validation steps as part of the implementation rather than something added only at the end.`,
+    Execution: `${section.title} covers what to do when you are in motion: debugging, incident handling, and narrowing uncertainty. The emphasis is on disciplined investigation instead of reactive patching.`,
+    Engineering: `${section.title} deals with technical tradeoffs that become visible at scale or under load. It asks you to connect implementation choices to latency, throughput, resilience, resource use, and long-term maintenance cost.`,
+    Design: `${section.title} is about shaping interfaces, workflows, or contracts so other people and systems can use them safely. It treats clarity at the boundary as a design responsibility, not an afterthought.`,
+    Reliability: `${section.title} looks at what happens after code ships. It focuses on whether the system can be observed, rolled out safely, recovered, and operated without guesswork.`,
+    Teamwork: `${section.title} covers the social side of engineering quality. It recognizes that review, documentation, and handoff quality directly affect correctness, speed, and future maintenance.`,
+    "AI Workflow": `${section.title} explains how to use Codex or similar assistants as leverage without outsourcing engineering judgment. The theme is structured prompting, constrained generation, and verification loops.`
+  };
+
+  return contexts[section.tag] ?? section.summary;
+}
+
+function buildTopicValue(section) {
+  const values = {
+    Foundation: `This is useful because strong system framing prevents expensive local fixes that solve the wrong problem. It improves decision quality before implementation starts.`,
+    Planning: `This helps by reducing scope drift, rework, and handoff confusion. The clearer the plan, the less likely the team is to mistake motion for progress.`,
+    "Code Quality": `This helps future changes stay cheap. Readable, well-bounded code lowers review time, debugging time, and the chance that a safe change turns into a risky rewrite.`,
+    Verification: `This is useful because confidence based on evidence scales better than confidence based on intuition. It catches regressions earlier and makes behavior easier to trust.`,
+    Execution: `This helps teams move faster during uncertainty because it creates a repeatable method for finding root causes and testing hypotheses safely.`,
+    Engineering: `This is useful because performance and resilience problems are usually tradeoff problems. Better engineering judgment prevents complexity from being added without measurable benefit.`,
+    Design: `This helps consumers of the system make fewer mistakes. Strong interfaces reduce ambiguity, hidden coupling, and the cost of future evolution.`,
+    Reliability: `This is useful because production systems are only as good as their observability and recovery story. It reduces surprise during rollout, incidents, and operational change.`,
+    Teamwork: `This helps quality compound across multiple contributors. Better collaboration practices make reviews sharper, context clearer, and future maintenance less dependent on one person.`,
+    "AI Workflow": `This is useful because assistants amplify both good structure and bad assumptions. Strong AI workflow habits increase speed without giving up reviewability or correctness.`
+  };
+
+  return values[section.tag] ?? "This topic helps make engineering decisions easier to explain, verify, and maintain.";
+}
+
+function buildTopicExample(section) {
+  const examples = {
+    Foundation: `Example: before changing ${section.title.toLowerCase()}, sketch the services, data flow, and operational dependencies involved so you can see where the real constraint sits.`,
+    Planning: `Example: turn ${section.title.toLowerCase()} into acceptance criteria, explicit non-goals, and one small deliverable slice before opening implementation work.`,
+    "Code Quality": `Example: if a change around ${section.title.toLowerCase()} feels hard to explain in review, simplify the control flow, rename the moving parts, or split responsibilities before adding features.`,
+    Verification: `Example: for ${section.title.toLowerCase()}, add one happy-path check, one boundary condition, and one regression test tied to a realistic failure mode.`,
+    Execution: `Example: when working on ${section.title.toLowerCase()}, write down the top two hypotheses, add instrumentation that can separate them, and change only one variable at a time.`,
+    Engineering: `Example: for ${section.title.toLowerCase()}, measure baseline behavior first, define what metric should improve, and compare the complexity cost of each optimization option.`,
+    Design: `Example: for ${section.title.toLowerCase()}, write one ideal usage example and one misuse example. If the bad case looks easy to trigger, the interface probably needs tightening.`,
+    Reliability: `Example: before shipping work related to ${section.title.toLowerCase()}, decide what logs, metrics, traces, alerts, and rollback steps you would need if it failed in production.`,
+    Teamwork: `Example: when a change touches ${section.title.toLowerCase()}, keep the diff narrow, explain the risk areas in the change description, and answer likely reviewer questions up front.`,
+    "AI Workflow": `Example: ask Codex to inspect the codebase for ${section.title.toLowerCase()}, propose two options, implement the smallest safe one, and then verify it with tests or explicit checks.`
+  };
+
+  return examples[section.tag] ?? `Example: explain ${section.title.toLowerCase()} in one sentence, define the failure mode it prevents, and add one concrete check that proves the guidance is working.`;
+}
+
 function renderNav(items) {
   topicList.innerHTML = "";
 
@@ -668,7 +719,7 @@ function renderNav(items) {
     details.open = window.innerWidth > 720 || groupIndex === 0;
 
     const summary = document.createElement("summary");
-    summary.className = "module-summary";
+    summary.className = "module-nav-summary";
     summary.innerHTML = `<span>${tag}</span><span class="module-meta">${groupedSections.length} sections</span>`;
 
     const subList = document.createElement("ul");
@@ -713,7 +764,7 @@ function renderModules(items) {
     card.querySelector(".section-tag").textContent = `${tag} module`;
     card.querySelector(".module-count").textContent = `${groupedSections.length} matching topics`;
     card.querySelector(".module-title").textContent = tag;
-    card.querySelector(".module-summary").textContent = moduleOverviews[tag] ?? `Shared guidance for the ${tag} topics.`;
+    card.querySelector(".module-intro").textContent = moduleOverviews[tag] ?? `Shared guidance for the ${tag} topics.`;
     fillList(card.querySelector(".principles-list"), blueprint.principles);
     fillList(card.querySelector(".codex-list"), blueprint.codex);
     fillList(card.querySelector(".risk-list"), blueprint.risks);
@@ -780,6 +831,9 @@ function renderSections(items, query) {
     card.querySelector(".section-anchor").textContent = `Topic ${String(index + 1).padStart(3, "0")}`;
     card.querySelector(".section-title").innerHTML = linkifyText(section.title);
     card.querySelector(".section-summary").innerHTML = linkifyText(section.summary);
+    card.querySelector(".topic-context").innerHTML = linkifyText(buildTopicContext(section));
+    card.querySelector(".topic-value").innerHTML = linkifyText(buildTopicValue(section));
+    card.querySelector(".topic-example").innerHTML = linkifyText(buildTopicExample(section));
     card.querySelector(".topic-module-note").innerHTML = `Shared guidance for this topic lives in the <a class="term-link" href="#module-${section.id.replace(/-\d+$/, "")}">${section.tag}</a> module card above.`;
     contentGrid.append(card);
   });
