@@ -1332,7 +1332,7 @@ function renderGlossary(items, query) {
 }
 
 function syncActiveSection() {
-  const cards = [...contentGrid.querySelectorAll(".section-card")];
+  const cards = [...moduleGrid.querySelectorAll(".section-card")];
   if (!cards.length) return;
 
   const panelTop = contentPanel.getBoundingClientRect().top;
